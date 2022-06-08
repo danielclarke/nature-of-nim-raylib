@@ -86,11 +86,11 @@ func p0(self: Mover): Vec2 =
 func p1(self: Mover): Vec2 =
   self.location + Vec2(x: 1.0, y: 1.0)
 
-func aabb(self: Mover): Aabb =
-  Aabb(p0: self.p0, p1: self.p1)
+# func aabb(self: Mover): Aabb =
+#   Aabb(p0: self.p0, p1: self.p1)
 
-func aabb(self: Wall): Aabb =
-  Aabb(p0: self.p0, p1: self.p1)
+# func aabb(self: Wall): Aabb =
+#   Aabb(p0: self.p0, p1: self.p1)
 
 proc update(self: var Mover) =
   self.velocity = self.velocity + self.acceleration / FRAME_RATE
@@ -179,7 +179,7 @@ proc loadWalls[w, h, n](walls: var array[n, Wall]; tiles: array[w, array[h, int]
         )
         inc iWall
 
-func checkCollision(a, b: Aabb, va, vb: Vec2): bool =
+func checkCollision[T, U: Aabb](a: T; b: U; va, vb: Vec2): bool =
   let collisionTime = timeToCollision(a, b, va, vb)
   if collisionTime.isSome() and collisionTime.get() < 1.0:
     return true
@@ -211,14 +211,14 @@ proc main() =
   defer:
     closeWindow()
 
-  let a = Aabb(p0: Vec2(x: 0.0, y: 0.0), p1: Vec2(x: 5.0, y: 5.0))
-  let b = Aabb(p0: Vec2(x: 10.0, y: 10.0), p1: Vec2(x: 15.0, y: 15.0))
-  let collisionTime = timeToCollision(a, b, Vec2(x: 0.0, y: 0.0), Vec2(x: -1.0, y: -0.5))
+  # let a = Aabb(p0: Vec2(x: 0.0, y: 0.0), p1: Vec2(x: 5.0, y: 5.0))
+  # let b = Aabb(p0: Vec2(x: 10.0, y: 10.0), p1: Vec2(x: 15.0, y: 15.0))
+  # let collisionTime = timeToCollision(a, b, Vec2(x: 0.0, y: 0.0), Vec2(x: -1.0, y: -0.5))
 
-  if collisionTime.isSome():
-    echo(fmt"time to collision: {collisionTime.get()}")
-  else:
-    echo(fmt"time to collision: None")
+  # if collisionTime.isSome():
+  #   echo(fmt"time to collision: {collisionTime.get()}")
+  # else:
+  #   echo(fmt"time to collision: None")
 
   # g = 15.75, jump = -0.421875
   while not windowShouldClose():
@@ -318,8 +318,8 @@ proc main() =
       let velocity = player.getUpdateVelocity()
       onGround = false
       for wall in walls:
-        if checkCollision(player.aabb, wall.aabb, velocity, Vec2(x: 0.0, y: 0.0)):
-          let aabbOverlap = player.aabb.overlap(wall.aabb)
+        if checkCollision(player, wall, velocity, Vec2(x: 0.0, y: 0.0)):
+          let aabbOverlap = player.overlap(wall)
           if velocity.x > 0.0 and player.p0.x < wall.p0.x and aabbOverlap.y > epsilon:
             player.velocity.x = 0.0
             player.acceleration.x = min(0.0, player.acceleration.x)

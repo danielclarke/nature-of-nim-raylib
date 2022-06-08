@@ -2,8 +2,9 @@ import std/options
 import vec2
 
 type
-  Aabb* = object
-    p0*, p1*: Vec2
+  Aabb* = concept a
+    a.p0 is Vec2
+    a.p1 is Vec2
 
 func timeToOverlap(a0, a1, b0, b1: float, va, vb: float): Option[float] {.inline.} =
   if a0 < b0 and a1 < b0 and va != vb:
@@ -46,7 +47,7 @@ func timeToDisjoint(a0, a1, b0, b1: float, va, vb: float): Option[float] {.inlin
     return none(float)
 
 
-func timeToOverlap(a, b: Aabb; va, vb: Vec2): Option[float] =
+func timeToOverlap[T, U: Aabb](a: T; b: U; va, vb: Vec2): Option[float] =
   var timeToOverlapX = timeToOverlap(a.p0.x, a.p1.x, b.p0.x, b.p1.x, va.x, vb.x)
   var timeToOverlapY = timeToOverlap(a.p0.y, a.p1.y, b.p0.y, b.p1.y, va.y, vb.y)
 
@@ -55,7 +56,7 @@ func timeToOverlap(a, b: Aabb; va, vb: Vec2): Option[float] =
   else:
     return none(float)
 
-func timeToDisjoint(a, b: Aabb; va, vb: Vec2): Option[float] =
+func timeToDisjoint[T, U: Aabb](a: T; b: U; va, vb: Vec2): Option[float] =
   var timeToDisjointX = timeToDisjoint(a.p0.x, a.p1.x, b.p0.x, b.p1.x, va.x, vb.x)
   var timeToDisjointY = timeToDisjoint(a.p0.y, a.p1.y, b.p0.y, b.p1.y, va.y, vb.y)
 
@@ -68,7 +69,7 @@ func timeToDisjoint(a, b: Aabb; va, vb: Vec2): Option[float] =
   else:
     return none(float)
 
-func timeToCollision*(a, b: Aabb; va, vb: Vec2): Option[float] =
+func timeToCollision*[T, U: Aabb](a: T; b: U; va, vb: Vec2): Option[float] =
   let overlapTime = timeToOverlap(a, b, va, vb)
   let disjointTime = timeToDisjoint(a, b, va, vb)
 
@@ -82,7 +83,7 @@ func timeToCollision*(a, b: Aabb; va, vb: Vec2): Option[float] =
   else:
     return none(float)
 
-func overlap*(a, b: Aabb): Vec2 =
+func overlap*[T, U: Aabb](a: T; b: U): Vec2 =
   let dx = max(0.0, min(a.p1.x, b.p1.x) - max(a.p0.x, b.p0.x))
   let dy = max(0.0, min(a.p1.y, b.p1.y) - max(a.p0.y, b.p0.y))
   return Vec2(x: dx, y: dy)
