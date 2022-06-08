@@ -60,11 +60,11 @@ const TILES = [
 ]
 
 type
-  Mover = tuple
+  Mover = object
     location, velocity, acceleration: Vec2
     mass, c: float
 
-  Wall = tuple
+  Wall = object
     p0, p1: Vec2
 
 func map[T](ar: openArray[T], f: proc(x: T){.noSideEffect.}) =
@@ -72,10 +72,10 @@ func map[T](ar: openArray[T], f: proc(x: T){.noSideEffect.}) =
     f(v)
 
 proc newMover(x, y, m, c: float): Mover =
-  return (
-    location: (x: x, y: y),
-    velocity: (x: 0.0, y: 0.0),
-    acceleration: (x: 0.0, y: 0.0),
+  return Mover(
+    location: Vec2(x: x, y: y),
+    velocity: Vec2(x: 0.0, y: 0.0),
+    acceleration: Vec2(x: 0.0, y: 0.0),
     mass: m,
     c: c
   )
@@ -84,10 +84,13 @@ func p0(self: Mover): Vec2 =
   self.location
 
 func p1(self: Mover): Vec2 =
-  self.location + (x: 1.0, y: 1.0)
+  self.location + Vec2(x: 1.0, y: 1.0)
 
 func aabb(self: Mover): Aabb =
-  (p0: self.p0, p1: self.p1)
+  Aabb(p0: self.p0, p1: self.p1)
+
+func aabb(self: Wall): Aabb =
+  Aabb(p0: self.p0, p1: self.p1)
 
 proc update(self: var Mover) =
   self.velocity = self.velocity + self.acceleration / FRAME_RATE
@@ -137,7 +140,7 @@ func getCollisionCorrection(a, b: Aabb): Vec2 =
   elif a.p0.y < b.p1.y and a.p1.y > b.p1.y:
     dy = b.p1.y - a.p0.y
 
-  return (x: dx, y: dy)
+  return Vec2(x: dx, y: dy)
 
 proc render(m: Mover) =
   drawRectangle(toInt(m.p0.x * TILE_WIDTH * SCALE), toInt(m.p0.y * TILE_WIDTH *
@@ -170,9 +173,9 @@ proc loadWalls[w, h, n](walls: var array[n, Wall]; tiles: array[w, array[h, int]
   for i, row in tiles:
     for j, tile in row:
       if tile > 0:
-        walls[iWall] = (
-          p0: (x: toFloat(i), y: toFloat(j)),
-          p1: (x: toFloat(i + 1), y: toFloat(j + 1))
+        walls[iWall] = Wall(
+          p0: Vec2(x: toFloat(i), y: toFloat(j)),
+          p1: Vec2(x: toFloat(i + 1), y: toFloat(j + 1))
         )
         inc iWall
 
@@ -192,7 +195,7 @@ proc main() =
   loadWalls(walls, TILES)
 
   const epsilon = 0.01
-  var g = (x: 0.0, y: 15.75)
+  var g = Vec2(x: 0.0, y: 15.75)
   var walkVelocity = 0.25
   var walkAcceleration = walkVelocity * 0.1
   var jumpImpulse = -0.421875
@@ -208,9 +211,9 @@ proc main() =
   defer:
     closeWindow()
 
-  let a = (p0: (x: 0.0, y: 0.0), p1: (x: 5.0, y: 5.0))
-  let b = (p0: (x: 10.0, y: 10.0), p1: (x: 15.0, y: 15.0))
-  let collisionTime = timeToCollision(a, b, (x: 0.0, y: 0.0), (x: -1.0, y: -0.5))
+  let a = Aabb(p0: Vec2(x: 0.0, y: 0.0), p1: Vec2(x: 5.0, y: 5.0))
+  let b = Aabb(p0: Vec2(x: 10.0, y: 10.0), p1: Vec2(x: 15.0, y: 15.0))
+  let collisionTime = timeToCollision(a, b, Vec2(x: 0.0, y: 0.0), Vec2(x: -1.0, y: -0.5))
 
   if collisionTime.isSome():
     echo(fmt"time to collision: {collisionTime.get()}")
@@ -315,8 +318,8 @@ proc main() =
       let velocity = player.getUpdateVelocity()
       onGround = false
       for wall in walls:
-        if checkCollision(player.aabb, wall, velocity, (x: 0.0, y: 0.0)):
-          let aabbOverlap = player.aabb.overlap(wall)
+        if checkCollision(player.aabb, wall.aabb, velocity, Vec2(x: 0.0, y: 0.0)):
+          let aabbOverlap = player.aabb.overlap(wall.aabb)
           if velocity.x > 0.0 and player.p0.x < wall.p0.x and aabbOverlap.y > epsilon:
             player.velocity.x = 0.0
             player.acceleration.x = min(0.0, player.acceleration.x)

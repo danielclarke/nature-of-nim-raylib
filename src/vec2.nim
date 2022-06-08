@@ -1,20 +1,20 @@
 import std/math
 
 type
-  Vec2* = tuple
-    x, y: float
+  Vec2* = object
+    x*, y*: float
 
 func `+`*(u, v: Vec2): Vec2 =
-  (x: u.x + v.x, y: u.y + v.y)
+  Vec2(x: u.x + v.x, y: u.y + v.y)
 
 func `-`*(u, v: Vec2): Vec2 =
-  (x: u.x - v.x, y: u.y - v.y)
+  Vec2(x: u.x - v.x, y: u.y - v.y)
 
 func `-`*(v: Vec2): Vec2 =
-  (x: -v.x, y: -v.y)
+  Vec2(x: -v.x, y: -v.y)
 
 func `*`*(v: Vec2, s: float): Vec2 =
-  (x: v.x * s, y: v.y * s)
+  Vec2(x: v.x * s, y: v.y * s)
 
 func `+=`*(u: var Vec2; v: Vec2) =
   u = u + v
@@ -29,7 +29,7 @@ func `*`*(s: float, v: Vec2): Vec2 =
   v * s
 
 func `/`*(v: Vec2, s: float): Vec2 =
-  (x: v.x / s, y: v.y / s)
+  Vec2(x: v.x / s, y: v.y / s)
 
 func mag*(v: Vec2): float =
   sqrt(v.x * v.x + v.y * v.y)

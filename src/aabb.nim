@@ -1,10 +1,9 @@
 import std/options
-import std/math
 import vec2
 
 type
-  Aabb* = tuple
-    p0, p1: Vec2
+  Aabb* = object
+    p0*, p1*: Vec2
 
 func timeToOverlap(a0, a1, b0, b1: float, va, vb: float): Option[float] {.inline.} =
   if a0 < b0 and a1 < b0 and va != vb:
@@ -86,4 +85,4 @@ func timeToCollision*(a, b: Aabb; va, vb: Vec2): Option[float] =
 func overlap*(a, b: Aabb): Vec2 =
   let dx = max(0.0, min(a.p1.x, b.p1.x) - max(a.p0.x, b.p0.x))
   let dy = max(0.0, min(a.p1.y, b.p1.y) - max(a.p0.y, b.p0.y))
-  return (x: dx, y: dy)
+  return Vec2(x: dx, y: dy)
