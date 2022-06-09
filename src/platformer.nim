@@ -11,11 +11,12 @@ import std/math
 import nimraylib_now
 import vec2
 import aabb
+# import font
 
 const TILE_WIDTH = 8
 const WIDTH = 32
 const HEIGHT = 28
-const SCALE = 1
+const SCALE = 3
 
 const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
@@ -26,21 +27,21 @@ const FRAME_RATE = 60
 
 const TILES = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -48,15 +49,50 @@ const TILES = [
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+]
+
+const WATERS = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
 ]
 
 type
@@ -66,6 +102,13 @@ type
 
   Wall = object
     p0, p1: Vec2
+  
+  Water = object
+    p0, p1: Vec2
+    c: float
+
+func toVector2(v: Vec2): Vector2 =
+  Vector2(x: v.x, y: v.y)
 
 func map[T](ar: openArray[T], f: proc(x: T){.noSideEffect.}) =
   for v in ar:
@@ -116,16 +159,27 @@ func drag(self: var Mover) =
   # let f = - self.c * speed * speed * self.velocity.norm()
   # self.applyForce(f)
 
-func checkCollision(a, b: Aabb): bool =
-  if a.p1.x < b.p0.x:
-    return false
-  elif b.p1.x < a.p0.x:
-    return false
-  elif a.p1.y < b.p0.y:
-    return false
-  elif b.p1.y < a.p0.y:
-    return false
-  return true
+func drag(self: var Mover, c: float) =
+  let speed = self.velocity.mag()
+  let f = - 0.5 * c * speed * speed * self.velocity.norm() * (self.p1.x - self.p0.x)
+  self.applyForce(f)
+
+
+func dead(self: var Mover) =
+  self.location = Vec2(x: 1.0, y: HEIGHT - 10.0)
+  self.velocity = Vec2(x: 0.0, y: 0.0)
+  self.acceleration = Vec2(x: 0.0, y: 0.0)
+
+# func checkCollision(a, b: Aabb): bool =
+#   if a.p1.x < b.p0.x:
+#     return false
+#   elif b.p1.x < a.p0.x:
+#     return false
+#   elif a.p1.y < b.p0.y:
+#     return false
+#   elif b.p1.y < a.p0.y:
+#     return false
+#   return true
 
 func getCollisionCorrection(a, b: Aabb): Vec2 =
   var dx = 0.0
@@ -147,7 +201,7 @@ proc render(m: Mover) =
       SCALE), TILE_WIDTH * SCALE,
     TILE_WIDTH * SCALE, colorFromHSV(15.0, 1.0, 1.0))
 
-proc render(w: Wall; c: Color = Lightgray) =
+proc render(w: Aabb; c: Color = Lightgray) =
   drawRectangle(
     toInt(w.p0.x) * TILE_WIDTH * SCALE,
     toInt(w.p0.y) * TILE_WIDTH * SCALE,
@@ -156,17 +210,13 @@ proc render(w: Wall; c: Color = Lightgray) =
     c
   )
 
-proc renderWall(i, j: int) =
-  drawRectangle(i * TILE_WIDTH * SCALE, j * TILE_WIDTH * SCALE, TILE_WIDTH *
-      SCALE, TILE_WIDTH * SCALE, Lightgray)
-
-proc countWalls[w, h](tiles: array[w, array[h, int]]): int =
-  var numWalls = 0
+proc countElems[w, h](tiles: array[w, array[h, int]]): int =
+  var count = 0
   for i, row in tiles:
     for j, tile in row:
       if tile > 0:
-        inc numWalls
-  return numWalls
+        inc count
+  return count
 
 proc loadWalls[w, h, n](walls: var array[n, Wall]; tiles: array[w, array[h, int]]) =
   var iWall = 0
@@ -179,7 +229,19 @@ proc loadWalls[w, h, n](walls: var array[n, Wall]; tiles: array[w, array[h, int]
         )
         inc iWall
 
-func checkCollision[T, U: Aabb](a: T; b: U; va, vb: Vec2): bool =
+proc loadWaters[w, h, n](waters: var array[n, Water]; tiles: array[w, array[h, int]], c: float) =
+  var iWater = 0
+  for i, row in tiles:
+    for j, tile in row:
+      if tile > 0:
+        waters[iWater] = Water(
+          p0: Vec2(x: toFloat(i), y: toFloat(j)),
+          p1: Vec2(x: toFloat(i + 1), y: toFloat(j + 1)),
+          c: c
+        )
+        inc iWater
+
+func checkCollision[T, U: Aabb](a: T; b: U; va, vb: Vec2 = Vec2(x: 0.0, y: 0.0)): bool =
   let collisionTime = timeToCollision(a, b, va, vb)
   if collisionTime.isSome() and collisionTime.get() < 1.0:
     return true
@@ -190,20 +252,28 @@ proc main() =
 
   randomize()
 
-  const numWalls = countWalls(TILES)
+  let font: Font = loadFont("../assets/font/pixantiqua.png")
+
+  const numWalls = countElems(TILES)
   var walls: array[numWalls, Wall]
   loadWalls(walls, TILES)
+
+  const numWaters = countElems(WATERS)
+  var waters: array[numWaters, Water]
+  loadWaters(waters, WATERS, 0.5)
 
   const epsilon = 0.01
   var g = Vec2(x: 0.0, y: 15.75)
   var walkVelocity = 0.25
   var walkAcceleration = walkVelocity * 0.1
   var jumpImpulse = -0.421875
+  var c = 320.0
 
-  var doubleJump: bool = false
+  var breath = 5.0
+  var doubleJump = false
   var jumpPower: array[2, float] = [0.0, 0.0]
 
-  var player = newMover(1.0, HEIGHT - 2.0, 12.0, 0.75)
+  var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
 
   initWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib nim - platformer")
@@ -225,11 +295,11 @@ proc main() =
     player.applyForce(g)
 
     if isKeyPressed(KeyboardKey.W):
-      g = g * 2.0
-      echo(fmt"g: {g}")
+      c = c * 2.0
+      echo(fmt"c: {c}")
     elif isKeyPressed(KeyboardKey.S):
-      g = g * 0.75
-      echo(fmt"g: {g}")
+      c = c * 0.75
+      echo(fmt"c: {c}")
 
     if isKeyPressed(KeyboardKey.E):
       jumpImpulse = jumpImpulse * 2.0
@@ -264,52 +334,19 @@ proc main() =
     elif isKeyDown(KeyboardKey.RIGHT):
       player.velocity.x = min(walkVelocity, player.velocity.x + walkAcceleration)
 
-    let cx = toInt(player.location.x)
-    let cy = toInt(player.location.y)
-
-    let cx0 = toInt(floor(player.p0.x + epsilon))
-    let cx1 = toInt(floor(player.p1.x - epsilon))
-    let cy0 = toInt(floor(player.p0.y + epsilon))
-    let cy1 = toInt(floor(player.p1.y - epsilon))
-
-    # echo(fmt"p0x {player.p0.x}, p1x {player.p1.x}; cx0 {cx0}, cx1 {cx1}")
-    # echo(fmt"p0y {player.p0.y}, p1y {player.p1.y}; cy0 {cy0}, cy1 {cy1}")
-
     beginDrawing:
       clearBackground(Darkgray)
-      render(player)
+
+      for water in waters:
+        render(water, Skyblue)
+
       for wall in walls:
         render(wall)
-      # for i, row in m.mpairs:
-      #   for j, wall in row.mpairs:
-      #     if wall == 1:
-      #       renderWall(i, j)
+
+      render(player)
+
       drawFPS(10, 10)
 
-      # if player.velocity.x > 0.0 and (m[cx1][cy0] == 1 or m[cx1][cy1] == 1):
-      #   player.velocity.x = min(0.0, player.velocity.x)
-      #   player.acceleration.x = min(0.0, player.acceleration.x)
-      #   player.location.x = toFloat(cx0)
-      # if player.velocity.x < 0.0 and (m[cx0][cy0] == 1 or m[cx0][cy1] == 1):
-      #   player.velocity.x = max(0.0, player.velocity.x)
-      #   player.acceleration.x = max(0.0, player.acceleration.x)
-      #   player.location.x = toFloat(cx1)
-      # if player.velocity.y >= 0.0 and m[cx][cy + 1] == 1:
-      #   player.velocity.y = 0.0
-      #   player.acceleration.y = 0.0
-      #   player.location.y = toFloat(cy)
-      #   doubleJump = false
-        # if not isKeyDown(KeyboardKey.LEFT) and not isKeyDown(KeyboardKey.RIGHT):
-        #   player.drag()
-        # if isKeyPressed(KeyboardKey.UP):
-        #   player.velocity.y = jumpImpulse
-      # if not doubleJump and isKeyPressed(KeyboardKey.UP):
-      #   player.velocity.y = jumpImpulse
-      #   doubleJump = true
-      # if player.velocity.y <= 0.0 and (m[cx0][cy - 1] == 1 or m[cx1][cy - 1] == 1):
-      #   player.velocity.y = max(0.0, player.velocity.y)
-      #   player.acceleration.y = max(0.0, player.acceleration.y)
-      #   player.location.y = toFloat(cy)
       if onGround and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
       elif not doubleJump and isKeyPressed(KeyboardKey.UP):
@@ -317,6 +354,7 @@ proc main() =
         doubleJump = true
       let velocity = player.getUpdateVelocity()
       onGround = false
+
       for wall in walls:
         if checkCollision(player, wall, velocity, Vec2(x: 0.0, y: 0.0)):
           let aabbOverlap = player.overlap(wall)
@@ -345,6 +383,22 @@ proc main() =
             player.location.y = wall.p1.y
             render(wall, Blue)
 
+      # breath = breath + 1.0 / FRAME_RATE
+      # drawTextEx(font, ($breath).cstring, toVector2((player.location - Vec2(x: 1.0, y: 1.0)) * TILE_WIDTH * SCALE), TILE_WIDTH * SCALE, 2.0, Red)
+      block underWater:
+        for water in waters:
+          if checkCollision(player, water):
+            breath -= 1.0 / FRAME_RATE
+            if breath < 0.0:
+              player.dead
+              break underWater
+            doubleJump = false
+            player.drag(c)
+            render(water, Green)
+            drawTextEx(font, ($toInt(breath)).cstring, toVector2((player.location - Vec2(x: 1.0, y: 1.0)) * TILE_WIDTH * SCALE), TILE_WIDTH * SCALE, 2.0, Red)
+            break underWater
+        breath = 5.0
+        
       player.update()
 
 main()
