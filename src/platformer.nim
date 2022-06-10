@@ -107,7 +107,7 @@ type
     p0, p1: Vec2
     c: float
 
-func toVector2(v: Vec2): Vector2 =
+converter toVector2(v: Vec2): Vector2 =
   Vector2(x: v.x, y: v.y)
 
 func map[T](ar: openArray[T], f: proc(x: T){.noSideEffect.}) =
@@ -252,8 +252,6 @@ proc main() =
 
   randomize()
 
-  let font: Font = loadFont("../assets/font/pixantiqua.png")
-
   const numWalls = countElems(TILES)
   var walls: array[numWalls, Wall]
   loadWalls(walls, TILES)
@@ -267,7 +265,7 @@ proc main() =
   var walkVelocity = 0.25
   var walkAcceleration = walkVelocity * 0.1
   var jumpImpulse = -0.421875
-  var c = 320.0
+  var c = 450.0
 
   var breath = 5.0
   var doubleJump = false
@@ -276,7 +274,16 @@ proc main() =
   var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
 
+  var camera = Camera2D()
+  camera.target = player.location
+  camera.offset = (x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT / 2)
+  camera.rotation = 0.0
+  camera.zoom = 1.0
+
   initWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib nim - platformer")
+
+  let font: Font = loadFont("assets/font/pixantiqua.ttf")
+
   setTargetFPS(FRAME_RATE)
   defer:
     closeWindow()
@@ -336,6 +343,9 @@ proc main() =
 
     beginDrawing:
       clearBackground(Darkgray)
+      drawFPS(10, 10)
+
+      beginMode2D(camera)
 
       for water in waters:
         render(water, Skyblue)
@@ -344,8 +354,6 @@ proc main() =
         render(wall)
 
       render(player)
-
-      drawFPS(10, 10)
 
       if onGround and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
@@ -395,10 +403,13 @@ proc main() =
             doubleJump = false
             player.drag(c)
             render(water, Green)
-            drawTextEx(font, ($toInt(breath)).cstring, toVector2((player.location - Vec2(x: 1.0, y: 1.0)) * TILE_WIDTH * SCALE), TILE_WIDTH * SCALE, 2.0, Red)
+            drawTextEx(font, ($toInt(breath)).cstring, (player.location - Vec2(x: 1.0, y: 1.0)) * TILE_WIDTH * SCALE, TILE_WIDTH * SCALE, 2.0, Red)
             break underWater
         breath = 5.0
-        
+      
+      camera.target = player.location * TILE_WIDTH * SCALE
+      endMode2D()
+
       player.update()
 
 main()
