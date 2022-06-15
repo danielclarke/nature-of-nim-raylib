@@ -4,7 +4,13 @@ type
   Vec2* = object
     x*, y*: float
 
+  Vec2Tuple = tuple
+    x, y: float
+
 func `+`*(u, v: Vec2): Vec2 =
+  Vec2(x: u.x + v.x, y: u.y + v.y)
+
+func `+`*(u: Vec2; v: Vec2Tuple): Vec2 =
   Vec2(x: u.x + v.x, y: u.y + v.y)
 
 func `-`*(u, v: Vec2): Vec2 =
@@ -12,6 +18,9 @@ func `-`*(u, v: Vec2): Vec2 =
 
 func `-`*(v: Vec2): Vec2 =
   Vec2(x: -v.x, y: -v.y)
+
+func `*`*(u, v: Vec2): Vec2 =
+  Vec2(x: u.x * v.x, y: u.y * v.y)
 
 func `*`*(v: Vec2, s: float): Vec2 =
   Vec2(x: v.x * s, y: v.y * s)
@@ -47,3 +56,6 @@ func limit*(v: Vec2, l: float): Vec2 =
     return v / m * l
   else:
     return v
+
+converter toVec2*(v: Vec2Tuple): Vec2 =
+  Vec2(x: v.x, y: v.y)
