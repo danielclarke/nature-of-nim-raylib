@@ -11,12 +11,13 @@ import std/math
 import nimraylib_now
 import vec2
 import aabb
+import particle_system
 # import font
 
 const TILE_WIDTH = 8
 const WIDTH = 32
 const HEIGHT = 28
-const SCALE = 3
+const SCALE = 1
 
 const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
@@ -110,6 +111,9 @@ type
 converter toVector2(v: Vec2): Vector2 =
   Vector2(x: v.x, y: v.y)
 
+converter toVec2(v: Vector2): Vec2 =
+  Vec2(x: v.x, y: v.y)
+
 func map[T](ar: openArray[T], f: proc(x: T){.noSideEffect.}) =
   for v in ar:
     f(v)
@@ -201,6 +205,9 @@ proc render(m: Mover) =
       SCALE), TILE_WIDTH * SCALE,
     TILE_WIDTH * SCALE, colorFromHSV(15.0, 1.0, 1.0))
 
+proc render(p: Particle) =
+  drawCircle(p.location.x.cint * TILE_WIDTH * SCALE, p.location.y.cint * TILE_WIDTH * SCALE, TILE_WIDTH * SCALE, Red)
+
 proc render(w: Aabb; c: Color = Lightgray) =
   drawRectangle(
     toInt(w.p0.x) * TILE_WIDTH * SCALE,
@@ -274,11 +281,18 @@ proc main() =
   var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
 
+  var particle = newParticle((x: 1.0, y: HEIGHT - 10.0), FRAME_RATE * 10)
+
   var camera = Camera2D()
   camera.target = player.location
   camera.offset = (x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT / 2)
   camera.rotation = 0.0
   camera.zoom = 1.0
+
+  var cameraError = Vec2(x: 0.0, y: 0.0)
+
+  var proportional: float = 0.0675
+  var integral: float = 0.0
 
   initWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib nim - platformer")
 
@@ -300,20 +314,21 @@ proc main() =
   # g = 15.75, jump = -0.421875
   while not windowShouldClose():
     player.applyForce(g)
+    # particle.applyForce(g)
 
     if isKeyPressed(KeyboardKey.W):
-      c = c * 2.0
-      echo(fmt"c: {c}")
+      proportional = proportional * 2.0
+      echo(fmt"proportional: {proportional}")
     elif isKeyPressed(KeyboardKey.S):
-      c = c * 0.75
-      echo(fmt"c: {c}")
+      proportional = proportional * 0.75
+      echo(fmt"proportional: {proportional}")
 
     if isKeyPressed(KeyboardKey.E):
-      jumpImpulse = jumpImpulse * 2.0
-      echo(fmt"jumpImpulse: {jumpImpulse}")
+      integral = integral * 2.0
+      echo(fmt"integral: {integral}")
     elif isKeyPressed(KeyboardKey.D):
-      jumpImpulse = jumpImpulse * 0.75
-      echo(fmt"jumpImpulse: {jumpImpulse}")
+      integral = integral * 0.75
+      echo(fmt"integral: {integral}")
 
     if isKeyPressed(KeyboardKey.R):
       player.mass = player.mass * 2.0
@@ -354,6 +369,8 @@ proc main() =
         render(wall)
 
       render(player)
+      if not particle.isDead:
+        render(particle)
 
       if onGround and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
@@ -407,9 +424,30 @@ proc main() =
             break underWater
         breath = 5.0
       
-      camera.target = player.location * TILE_WIDTH * SCALE
+      var targetDelta: Vec2 #= player.location + player.velocity.norm * 7.0 * TILE_WIDTH * SCALE - camera.target.toVec2
+      if player.velocity.x > 0:
+        targetDelta = (player.location + (x: 7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
+      elif player.velocity.x < 0:
+        targetDelta = (player.location + (x: -7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
+      else:
+        targetDelta = player.location * TILE_WIDTH * SCALE - camera.target.toVec2
+
+      cameraError += targetDelta
+      
+      # camera.target = camera.target + (targetDelta / 15.0).toVector2 + (cameraError * 0.0025).toVector2
+      camera.target = camera.target + (targetDelta * proportional).toVector2 + (cameraError * integral).toVector2
+
+      drawRectangle(
+        toInt(camera.target.x),
+        toInt(camera.target.y),
+        1 * TILE_WIDTH * SCALE,
+        1 * TILE_WIDTH * SCALE,
+        Yellow
+      )
+
       endMode2D()
 
       player.update()
+      particle.update()
 
 main()
