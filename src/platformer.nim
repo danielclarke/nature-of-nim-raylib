@@ -17,7 +17,7 @@ import particle_system
 const TILE_WIDTH = 8
 const WIDTH = 32
 const HEIGHT = 28
-const SCALE = 1
+const SCALE = 2
 
 const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
@@ -206,7 +206,7 @@ proc render(m: Mover) =
     TILE_WIDTH * SCALE, colorFromHSV(15.0, 1.0, 1.0))
 
 proc render(p: Particle) =
-  drawCircle(p.location.x.cint * TILE_WIDTH * SCALE, p.location.y.cint * TILE_WIDTH * SCALE, TILE_WIDTH * SCALE, Red)
+  drawCircle((p.location.x * TILE_WIDTH * SCALE).cint, (p.location.y * TILE_WIDTH * SCALE).cint, TILE_WIDTH * SCALE, Red)
 
 proc render(w: Aabb; c: Color = Lightgray) =
   drawRectangle(
@@ -280,8 +280,9 @@ proc main() =
 
   var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
-
-  var particle = newParticle((x: 1.0, y: HEIGHT - 10.0), FRAME_RATE * 10)
+  
+  var particleSystem = newParticleSystem((x: 1.0, y: HEIGHT - 10.0), 120, FRAME_RATE * 2)
+  var particleSystem2 = newParticleSystem((x: 10.0, y: HEIGHT - 10.0), 120, FRAME_RATE * 2)
 
   var camera = Camera2D()
   camera.target = player.location
@@ -291,8 +292,10 @@ proc main() =
 
   var cameraError = Vec2(x: 0.0, y: 0.0)
 
-  var proportional: float = 0.0675
-  var integral: float = 0.0
+  var proportional: Vec2 = (x: 0.0675, y: 0.025)
+  var integral: Vec2 = (x: 0.0, y: 0.0)
+  var derivative: Vec2 = (x: 0.0, y: 0.0)
+  var pTargetDelta: Vec2 = (x: 0.0, y: 0.0)
 
   initWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib nim - platformer")
 
@@ -317,39 +320,46 @@ proc main() =
     # particle.applyForce(g)
 
     if isKeyPressed(KeyboardKey.W):
-      proportional = proportional * 2.0
-      echo(fmt"proportional: {proportional}")
-    elif isKeyPressed(KeyboardKey.S):
-      proportional = proportional * 0.75
-      echo(fmt"proportional: {proportional}")
+      proportional.x = proportional.x * 2.0
+      echo(fmt"proportional.x: {proportional.x}")
+    elif isKeyPressed(KeyboardKey.Q):
+      proportional.x = proportional.x * 0.75
+      echo(fmt"proportional.x: {proportional.x}")
 
-    if isKeyPressed(KeyboardKey.E):
-      integral = integral * 2.0
-      echo(fmt"integral: {integral}")
-    elif isKeyPressed(KeyboardKey.D):
-      integral = integral * 0.75
-      echo(fmt"integral: {integral}")
+    if isKeyPressed(KeyboardKey.S):
+      proportional.y = proportional.y * 2.0
+      echo(fmt"proportional.y: {proportional.y}")
+    elif isKeyPressed(KeyboardKey.A):
+      proportional.y = proportional.y * 0.75
+      echo(fmt"proportional.y: {proportional.y}")
 
     if isKeyPressed(KeyboardKey.R):
-      player.mass = player.mass * 2.0
-      echo(fmt"player.mass: {player.mass}")
-    elif isKeyPressed(KeyboardKey.F):
-      player.mass = player.mass * 0.75
-      echo(fmt"player.mass: {player.mass}")
+      integral.x = integral.x * 2.0
+      echo(fmt"integral.x: {integral.x}")
+    elif isKeyPressed(KeyboardKey.E):
+      integral.x = integral.x * 0.75
+      echo(fmt"integral.x: {integral.x}")
 
-    if isKeyPressed(KeyboardKey.T):
-      player.c = min(1.0, player.c * 2.0)
-      echo(fmt"player.c: {player.c}")
-    elif isKeyPressed(KeyboardKey.G):
-      player.c = player.c * 0.75
-      echo(fmt"player.c: {player.c}")
+    if isKeyPressed(KeyboardKey.F):
+      integral.y = integral.y * 2.0
+      echo(fmt"integral.y: {integral.y}")
+    elif isKeyPressed(KeyboardKey.D):
+      integral.y = integral.y * 0.75
+      echo(fmt"integral.y: {integral.y}")
 
     if isKeyPressed(KeyboardKey.Y):
-      walkVelocity = min(1.0, walkVelocity * 2.0)
-      echo(fmt"walkVelocity: {walkVelocity}")
-    elif isKeyPressed(KeyboardKey.H):
-      walkVelocity = walkVelocity * 0.75
-      echo(fmt"walkVelocity: {walkVelocity}")
+      derivative.x = derivative.x * 2.0
+      echo(fmt"derivative.x: {derivative.x}")
+    elif isKeyPressed(KeyboardKey.T):
+      derivative.x = derivative.x * 0.75
+      echo(fmt"derivative.x: {derivative.x}")
+
+    if isKeyPressed(KeyboardKey.H):
+      derivative.y = derivative.y * 2.0
+      echo(fmt"derivative.y: {derivative.y}")
+    elif isKeyPressed(KeyboardKey.G):
+      derivative.y = derivative.y * 0.75
+      echo(fmt"derivative.y: {derivative.y}")
 
     if isKeyDown(KeyboardKey.LEFT):
       player.velocity.x = max(-walkVelocity, player.velocity.x - walkAcceleration)
@@ -358,7 +368,11 @@ proc main() =
 
     beginDrawing:
       clearBackground(Darkgray)
-      drawFPS(10, 10)
+      # drawFPS(10, 10)
+
+      # drawTextEx(font, fmt"P {proportional}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
+      # drawTextEx(font, fmt"I {integral}".cstring, Vec2(x: 1.0, y: 4.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
+      # drawTextEx(font, fmt"D {derivative}".cstring, Vec2(x: 1.0, y: 7.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 
       beginMode2D(camera)
 
@@ -369,8 +383,12 @@ proc main() =
         render(wall)
 
       render(player)
-      if not particle.isDead:
-        render(particle)
+      for particle in particleSystem.particles:
+        if not particle.isDead:
+          render(particle)
+      for particle in particleSystem2.particles:
+        if not particle.isDead:
+          render(particle)
 
       if onGround and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
@@ -424,30 +442,40 @@ proc main() =
             break underWater
         breath = 5.0
       
-      var targetDelta: Vec2 #= player.location + player.velocity.norm * 7.0 * TILE_WIDTH * SCALE - camera.target.toVec2
-      if player.velocity.x > 0:
-        targetDelta = (player.location + (x: 7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
-      elif player.velocity.x < 0:
-        targetDelta = (player.location + (x: -7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
-      else:
-        targetDelta = player.location * TILE_WIDTH * SCALE - camera.target.toVec2
-
-      cameraError += targetDelta
+      var targetDelta: Vec2 = (player.location + player.velocity.norm * (x: 7.0, y: 7.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
+      # if player.velocity.x > 0:
+      #   targetDelta = (player.location + (x: 7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
+      # elif player.velocity.x < 0:
+      #   targetDelta = (player.location + (x: -7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
+      # else:
+      #   targetDelta = player.location * TILE_WIDTH * SCALE - camera.target.toVec2
       
       # camera.target = camera.target + (targetDelta / 15.0).toVector2 + (cameraError * 0.0025).toVector2
-      camera.target = camera.target + (targetDelta * proportional).toVector2 + (cameraError * integral).toVector2
+      camera.target = camera.target + (targetDelta * proportional).toVector2 + (cameraError * integral).toVector2 + ((targetDelta - pTargetDelta) * derivative / FRAME_RATE).toVector2
+      pTargetDelta = targetDelta
+      cameraError += targetDelta
 
       drawRectangle(
         toInt(camera.target.x),
         toInt(camera.target.y),
         1 * TILE_WIDTH * SCALE,
         1 * TILE_WIDTH * SCALE,
-        Yellow
+        Color(r: 253, g: 249, b: 0, a: 100)
+      )
+
+      drawRectangle(
+        toInt((player.location.x + player.velocity.norm.x * 7.0) * TILE_WIDTH * SCALE),
+        toInt((player.location.y + player.velocity.norm.y * 3.5) * TILE_WIDTH * SCALE),
+        1 * TILE_WIDTH * SCALE,
+        1 * TILE_WIDTH * SCALE,
+        Color(r: 255, g: 161, b: 0, a: 100)
       )
 
       endMode2D()
 
       player.update()
-      particle.update()
+      particleSystem.update()
+      particleSystem2.update()
+      drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 
 main()
