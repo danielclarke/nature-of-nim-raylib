@@ -12,7 +12,6 @@ import nimraylib_now
 import vec2
 import aabb
 import particle_system
-# import font
 
 const TILE_WIDTH = 8
 const WIDTH = 32
