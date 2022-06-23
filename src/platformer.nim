@@ -11,6 +11,8 @@ import std/math
 import nimraylib_now
 import vec2
 import aabb
+import tiles
+import mover
 import particle_system
 
 const TILE_WIDTH = 8
@@ -20,86 +22,10 @@ const SCALE = 2
 
 const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
-const SCREEN_WIDTH_F = toFloat(SCREEN_WIDTH)
-const SCREEN_HEIGHT_F = toFloat(SCREEN_HEIGHT)
 
 const FRAME_RATE = 60
 
-const TILES = [
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-]
-
-const WATERS = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-]
-
 type
-  Mover = object
-    location, velocity, acceleration: Vec2
-    mass, c: float
-
   Wall = object
     p0, p1: Vec2
   
@@ -113,91 +39,10 @@ converter toVector2(v: Vec2): Vector2 =
 converter toVec2(v: Vector2): Vec2 =
   Vec2(x: v.x, y: v.y)
 
-func map[T](ar: openArray[T], f: proc(x: T){.noSideEffect.}) =
-  for v in ar:
-    f(v)
-
-proc newMover(x, y, m, c: float): Mover =
-  return Mover(
-    location: Vec2(x: x, y: y),
-    velocity: Vec2(x: 0.0, y: 0.0),
-    acceleration: Vec2(x: 0.0, y: 0.0),
-    mass: m,
-    c: c
-  )
-
-func p0(self: Mover): Vec2 =
-  self.location
-
-func p1(self: Mover): Vec2 =
-  self.location + Vec2(x: 1.0, y: 1.0)
-
-# func aabb(self: Mover): Aabb =
-#   Aabb(p0: self.p0, p1: self.p1)
-
-# func aabb(self: Wall): Aabb =
-#   Aabb(p0: self.p0, p1: self.p1)
-
-proc update(self: var Mover) =
-  self.velocity = self.velocity + self.acceleration / FRAME_RATE
-  self.velocity = self.velocity.limit(10.0)
-  self.location = self.location + self.velocity
-  self.acceleration = self.acceleration * 0.0
-
-func getUpdateVelocity(self: Mover): Vec2 =
-  return self.velocity + self.acceleration / FRAME_RATE
-
-proc projectLocation(self: Mover): Vec2 =
-  var velocity = self.velocity + self.acceleration / FRAME_RATE
-  velocity = velocity.limit(10.0)
-  return self.location + self.velocity
-
-func applyForce(self: var Mover, force: Vec2) =
-  let da = force / self.mass
-  self.acceleration = self.acceleration + da
-
-func drag(self: var Mover) =
-  self.velocity *= self.c
-  # let speed = self.velocity.mag()
-  # let f = - self.c * speed * speed * self.velocity.norm()
-  # self.applyForce(f)
-
-func drag(self: var Mover, c: float) =
-  let speed = self.velocity.mag()
-  let f = - 0.5 * c * speed * speed * self.velocity.norm() * (self.p1.x - self.p0.x)
-  self.applyForce(f)
-
-
 func dead(self: var Mover) =
   self.location = Vec2(x: 1.0, y: HEIGHT - 10.0)
   self.velocity = Vec2(x: 0.0, y: 0.0)
   self.acceleration = Vec2(x: 0.0, y: 0.0)
-
-# func checkCollision(a, b: Aabb): bool =
-#   if a.p1.x < b.p0.x:
-#     return false
-#   elif b.p1.x < a.p0.x:
-#     return false
-#   elif a.p1.y < b.p0.y:
-#     return false
-#   elif b.p1.y < a.p0.y:
-#     return false
-#   return true
-
-func getCollisionCorrection(a, b: Aabb): Vec2 =
-  var dx = 0.0
-  if a.p0.x < b.p0.x and a.p1.x > b.p0.x:
-    dx = b.p0.x - a.p1.x
-  elif a.p0.x < b.p1.x and a.p1.x > b.p1.x:
-    dx = b.p1.x - a.p0.x
-
-  var dy = 0.0
-  if a.p0.y < b.p0.y and a.p1.y > b.p0.y:
-    dy = b.p0.y - a.p1.y
-  elif a.p0.y < b.p1.y and a.p1.y > b.p1.y:
-    dy = b.p1.y - a.p0.y
-
-  return Vec2(x: dx, y: dy)
 
 proc render(m: Mover) =
   drawRectangle(toInt(m.p0.x * TILE_WIDTH * SCALE), toInt(m.p0.y * TILE_WIDTH *
@@ -205,7 +50,9 @@ proc render(m: Mover) =
     TILE_WIDTH * SCALE, colorFromHSV(15.0, 1.0, 1.0))
 
 proc render(p: Particle) =
-  drawCircle((p.location.x * TILE_WIDTH * SCALE).cint, (p.location.y * TILE_WIDTH * SCALE).cint, TILE_WIDTH * SCALE, Red)
+  drawRectangle(toInt(p.location.x * TILE_WIDTH * SCALE), toInt(p.location.y * TILE_WIDTH *
+      SCALE), (TILE_WIDTH * SCALE / 2).cint,
+    (TILE_WIDTH * SCALE / 2).cint, colorFromHSV(15.0, 1.0, 1.0))
 
 proc render(w: Aabb; c: Color = Lightgray) =
   drawRectangle(
@@ -275,13 +122,11 @@ proc main() =
 
   var breath = 5.0
   var doubleJump = false
-  var jumpPower: array[2, float] = [0.0, 0.0]
 
   var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
   
   var particleSystem = newParticleSystem((x: 1.0, y: HEIGHT - 10.0), 120, FRAME_RATE * 2)
-  var particleSystem2 = newParticleSystem((x: 10.0, y: HEIGHT - 10.0), 120, FRAME_RATE * 2)
 
   var camera = Camera2D()
   camera.target = player.location
@@ -304,19 +149,9 @@ proc main() =
   defer:
     closeWindow()
 
-  # let a = Aabb(p0: Vec2(x: 0.0, y: 0.0), p1: Vec2(x: 5.0, y: 5.0))
-  # let b = Aabb(p0: Vec2(x: 10.0, y: 10.0), p1: Vec2(x: 15.0, y: 15.0))
-  # let collisionTime = timeToCollision(a, b, Vec2(x: 0.0, y: 0.0), Vec2(x: -1.0, y: -0.5))
-
-  # if collisionTime.isSome():
-  #   echo(fmt"time to collision: {collisionTime.get()}")
-  # else:
-  #   echo(fmt"time to collision: None")
-
   # g = 15.75, jump = -0.421875
   while not windowShouldClose():
     player.applyForce(g)
-    # particle.applyForce(g)
 
     if isKeyPressed(KeyboardKey.W):
       proportional.x = proportional.x * 2.0
@@ -367,7 +202,7 @@ proc main() =
 
     beginDrawing:
       clearBackground(Darkgray)
-      # drawFPS(10, 10)
+      drawFPS(10, 10)
 
       # drawTextEx(font, fmt"P {proportional}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
       # drawTextEx(font, fmt"I {integral}".cstring, Vec2(x: 1.0, y: 4.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
@@ -382,19 +217,19 @@ proc main() =
         render(wall)
 
       render(player)
+
+      beginBlendMode(BlendMode.ADDITIVE)
       for particle in particleSystem.particles:
         if not particle.isDead:
           render(particle)
-      for particle in particleSystem2.particles:
-        if not particle.isDead:
-          render(particle)
+      endBlendMode()
 
       if onGround and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
       elif not doubleJump and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
         doubleJump = true
-      let velocity = player.getUpdateVelocity()
+      let velocity = player.getUpdateVelocity(1.0 / FRAME_RATE)
       onGround = false
 
       for wall in walls:
@@ -425,8 +260,11 @@ proc main() =
             player.location.y = wall.p1.y
             render(wall, Blue)
 
-      # breath = breath + 1.0 / FRAME_RATE
-      # drawTextEx(font, ($breath).cstring, toVector2((player.location - Vec2(x: 1.0, y: 1.0)) * TILE_WIDTH * SCALE), TILE_WIDTH * SCALE, 2.0, Red)
+      for wall in walls:
+        for _, particle in mpairs(particleSystem.particles):
+           if checkCollision(particle, wall, velocity, Vec2(x: 0.0, y: 0.0)):
+            render(wall, Red)
+
       block underWater:
         for water in waters:
           if checkCollision(player, water):
@@ -442,13 +280,6 @@ proc main() =
         breath = 5.0
       
       var targetDelta: Vec2 = (player.location + player.velocity.norm * (x: 7.0, y: 7.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
-      # if player.velocity.x > 0:
-      #   targetDelta = (player.location + (x: 7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
-      # elif player.velocity.x < 0:
-      #   targetDelta = (player.location + (x: -7.0, y: 0.0)) * TILE_WIDTH * SCALE - camera.target.toVec2
-      # else:
-      #   targetDelta = player.location * TILE_WIDTH * SCALE - camera.target.toVec2
-      
       # camera.target = camera.target + (targetDelta / 15.0).toVector2 + (cameraError * 0.0025).toVector2
       camera.target = camera.target + (targetDelta * proportional).toVector2 + (cameraError * integral).toVector2 + ((targetDelta - pTargetDelta) * derivative / FRAME_RATE).toVector2
       pTargetDelta = targetDelta
@@ -472,9 +303,8 @@ proc main() =
 
       endMode2D()
 
-      player.update()
+      player.update(1.0 / FRAME_RATE)
       particleSystem.update()
-      particleSystem2.update()
       drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 
 main()

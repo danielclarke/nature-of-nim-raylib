@@ -31,6 +31,12 @@ proc update*(self: var Particle) =
 func isDead*(self: Particle): bool =
   self.lifespan <= 0.0
 
+func p0*(self: Particle): Vec2 =
+  self.location
+
+func p1*(self: Particle): Vec2 =
+  self.location + Vec2(x: 0.5, y: 0.5)
+
 proc newParticleSystem*(location: Vec2; numParticles: int; lifespan: float): ParticleSystem =
   var particles: seq[Particle] = @[]
   for i in 0 .. numParticles:
