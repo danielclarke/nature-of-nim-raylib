@@ -1,5 +1,3 @@
-# separate physics from screen size
-# access surrounding tiles from array but use collision detection on those
 # spatial data store for collisions
 # platforms
 # other moving entities
