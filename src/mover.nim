@@ -1,3 +1,4 @@
+import std/strformat
 import vec2
 
 type
@@ -22,12 +23,12 @@ func p1*(self: Mover): Vec2 =
 
 proc update*(self: var Mover, dt: float) =
   self.velocity = self.velocity + self.acceleration * dt
-  self.velocity = self.velocity.limit(10.0)
-  self.location = self.location + self.velocity
+  self.velocity = self.velocity.limit(40.0)
+  self.location = self.location + self.velocity * dt
   self.acceleration = self.acceleration * 0.0
 
 func getUpdateVelocity*(self: Mover, dt: float): Vec2 =
-  return self.velocity + self.acceleration * dt
+  return self.velocity * dt + self.acceleration * dt * dt
 
 func applyForce*(self: var Mover, force: Vec2) =
   let da = force / self.mass

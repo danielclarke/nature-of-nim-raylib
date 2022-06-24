@@ -16,15 +16,15 @@ type
 proc newParticle*(location: Vec2; lifespan: float): Particle =
   Particle(
     location: location,
-    velocity: (x: (rand(10.0) - 5.0) / 60.0, y: rand(10.0) * -1.0 / 60.0),
-    acceleration: (x: 0.0, y: 0.1 / 60.0),
+    velocity: (x: (rand(10.0) - 5.0), y: rand(10.0) * -1.0),
+    acceleration: (x: 0.0, y: 3.0),
     lifespan: lifespan
   )
 
-proc update*(self: var Particle) =
-  self.velocity = self.velocity + self.acceleration
+proc update*(self: var Particle, dt: float) =
+  self.velocity = self.velocity + self.acceleration * dt
   self.velocity = self.velocity.limit(10.0)
-  self.location = self.location + self.velocity
+  self.location = self.location + self.velocity * dt
   self.lifespan -= 1.0
   # self.acceleration = self.acceleration * 0.0
 
@@ -43,8 +43,8 @@ proc newParticleSystem*(location: Vec2; numParticles: int; lifespan: float): Par
     particles.add(newParticle(location, lifespan))
   ParticleSystem(particles: particles, location: location, lifespan: lifespan)
 
-proc update*(self: var ParticleSystem) =
+proc update*(self: var ParticleSystem, dt: float) =
   for _, particle in mpairs(self.particles):
-    particle.update()
+    particle.update(dt)
   self.particles = self.particles.filter(proc(p: Particle): bool = not p.isDead)
   self.particles.add(newParticle(self.location, self.lifespan))

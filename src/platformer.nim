@@ -114,11 +114,11 @@ proc main() =
   loadWaters(waters, WATERS, 0.5)
 
   const epsilon = 0.01
-  var g = Vec2(x: 0.0, y: 15.75)
-  var walkVelocity = 0.25
+  var g = Vec2(x: 0.0, y: 50.0) #15.75)
+  var walkVelocity = 15.0
   var walkAcceleration = walkVelocity * 0.1
-  var jumpImpulse = -0.421875
-  var c = 450.0
+  var jumpImpulse = -20.0 #-0.421875 * FRAME_RATE
+  var c = 10.0
 
   var breath = 5.0
   var doubleJump = false
@@ -149,9 +149,8 @@ proc main() =
   defer:
     closeWindow()
 
-  # g = 15.75, jump = -0.421875
   while not windowShouldClose():
-    player.applyForce(g)
+    player.acceleration += g
 
     if isKeyPressed(KeyboardKey.W):
       proportional.x = proportional.x * 2.0
@@ -304,7 +303,7 @@ proc main() =
       endMode2D()
 
       player.update(1.0 / FRAME_RATE)
-      particleSystem.update()
+      particleSystem.update(1.0 / FRAME_RATE)
       drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 
 main()
