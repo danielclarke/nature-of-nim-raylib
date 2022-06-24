@@ -44,22 +44,12 @@ func dead(self: var Mover) =
   self.velocity = Vec2(x: 0.0, y: 0.0)
   self.acceleration = Vec2(x: 0.0, y: 0.0)
 
-proc render(m: Mover) =
-  drawRectangle(toInt(m.p0.x * TILE_WIDTH * SCALE), toInt(m.p0.y * TILE_WIDTH *
-      SCALE), TILE_WIDTH * SCALE,
-    TILE_WIDTH * SCALE, colorFromHSV(15.0, 1.0, 1.0))
-
-proc render(p: Particle) =
-  drawRectangle(toInt(p.location.x * TILE_WIDTH * SCALE), toInt(p.location.y * TILE_WIDTH *
-      SCALE), (TILE_WIDTH * SCALE / 2).cint,
-    (TILE_WIDTH * SCALE / 2).cint, colorFromHSV(15.0, 1.0, 1.0))
-
-proc render(w: Aabb; c: Color = Lightgray) =
+proc render(a: Aabb; c: Color = Lightgray) =
   drawRectangle(
-    toInt(w.p0.x) * TILE_WIDTH * SCALE,
-    toInt(w.p0.y) * TILE_WIDTH * SCALE,
-    toInt(w.p1.x - w.p0.x) * TILE_WIDTH * SCALE,
-    toInt(w.p1.y - w.p0.y) * TILE_WIDTH * SCALE,
+    (a.p0.x * TILE_WIDTH * SCALE).cint,
+    (a.p0.y * TILE_WIDTH * SCALE).cint,
+    ((a.p1.x - a.p0.x) * TILE_WIDTH * SCALE).cint,
+    ((a.p1.y - a.p0.y) * TILE_WIDTH * SCALE).cint,
     c
   )
 
@@ -215,12 +205,12 @@ proc main() =
       for wall in walls:
         render(wall)
 
-      render(player)
+      render(player, colorFromHSV(15.0, 1.0, 1.0))
 
       beginBlendMode(BlendMode.ADDITIVE)
       for particle in particleSystem.particles:
         if not particle.isDead:
-          render(particle)
+          render(particle, colorFromHSV(15.0, 1.0, 1.0))
       endBlendMode()
 
       if onGround and isKeyPressed(KeyboardKey.UP):
