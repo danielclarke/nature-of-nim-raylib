@@ -1,4 +1,5 @@
 import std/random
+import std/math
 import sequtils
 
 import vec2
@@ -10,14 +11,14 @@ type
   
   ParticleSystem* = object
     particles*: seq[Particle]
-    location: Vec2
-    lifespan: float
+    location, velocityMin, velocityMax, acceleration: Vec2
+    generationRate, generationCount, lifespan: float
 
-proc newParticle*(location: Vec2; lifespan: float): Particle =
+proc newParticle*(location, velocity, acceleration: Vec2; lifespan: float): Particle =
   Particle(
     location: location,
-    velocity: (x: (rand(10.0) - 5.0), y: rand(10.0) * -1.0),
-    acceleration: (x: 0.0, y: 3.0),
+    velocity: velocity, #(x: (rand(10.0) - 5.0), y: rand(10.0) * -1.0),
+    acceleration: acceleration, #(x: 0.0, y: 3.0),
     lifespan: lifespan
   )
 
@@ -37,14 +38,36 @@ func p0*(self: Particle): Vec2 =
 func p1*(self: Particle): Vec2 =
   self.location + Vec2(x: 0.5, y: 0.5)
 
-proc newParticleSystem*(location: Vec2; numParticles: int; lifespan: float): ParticleSystem =
+proc newParticleSystem*(
+    location, velocityMin, velocityMax, acceleration: Vec2;
+    generationRate, lifespan: float
+  ): ParticleSystem =
   var particles: seq[Particle] = @[]
-  for i in 0 .. numParticles:
-    particles.add(newParticle(location, lifespan))
-  ParticleSystem(particles: particles, location: location, lifespan: lifespan)
+  ParticleSystem(
+    particles: particles,
+    location: location,
+    velocityMin: velocityMin,
+    velocityMax: velocityMax,
+    acceleration: acceleration,
+    generationRate: generationRate,
+    generationCount: 0.0,
+    lifespan: lifespan
+  )
 
 proc update*(self: var ParticleSystem, dt: float) =
   for _, particle in mpairs(self.particles):
     particle.update(dt)
+
   self.particles = self.particles.filter(proc(p: Particle): bool = not p.isDead)
-  self.particles.add(newParticle(self.location, self.lifespan))
+
+  self.generationCount += self.generationRate
+  for i in 1 .. floor(self.generationCount).toInt:
+    self.particles.add(
+      newParticle(
+        self.location,
+        randVec2(self.velocityMin, self.velocityMax),
+        self.acceleration,
+        self.lifespan
+      )
+    )
+    self.generationCount -= 1.0

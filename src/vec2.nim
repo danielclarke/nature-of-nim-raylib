@@ -1,4 +1,5 @@
 import std/math
+import std/random
 
 type
   Vec2* = object
@@ -56,6 +57,9 @@ func limit*(v: Vec2, l: float): Vec2 =
     return v / m * l
   else:
     return v
+
+proc randVec2*(min, max: Vec2): Vec2 =
+  Vec2(x: rand(max.x - min.x) + min.x, y: rand(max.y - min.y) + min.y)
 
 converter toVec2*(v: Vec2Tuple): Vec2 =
   Vec2(x: v.x, y: v.y)

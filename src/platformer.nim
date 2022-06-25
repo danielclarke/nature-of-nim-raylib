@@ -114,7 +114,14 @@ proc main() =
   var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
   
-  var particleSystem = newParticleSystem((x: 1.0, y: HEIGHT - 10.0), 120, FRAME_RATE * 2)
+  var particleSystem = newParticleSystem(
+    (x: 1.0, y: HEIGHT - 10.0), 
+    (x: 0.0, y: 0.0),
+    (x: 1.0, y: 1.0),
+    (x: 0.0, y: 3.0),
+    1.0,
+    FRAME_RATE * 2
+  )
 
   var camera = Camera2D()
   camera.target = player.location
