@@ -1,4 +1,3 @@
-import std/strformat
 import vec2
 
 type

@@ -1,4 +1,3 @@
-import std/random
 import std/math
 import sequtils
 
@@ -17,8 +16,8 @@ type
 proc newParticle*(location, velocity, acceleration: Vec2; lifespan: float): Particle =
   Particle(
     location: location,
-    velocity: velocity, #(x: (rand(10.0) - 5.0), y: rand(10.0) * -1.0),
-    acceleration: acceleration, #(x: 0.0, y: 3.0),
+    velocity: velocity,
+    acceleration: acceleration,
     lifespan: lifespan
   )
 
@@ -27,7 +26,6 @@ proc update*(self: var Particle, dt: float) =
   self.velocity = self.velocity.limit(10.0)
   self.location = self.location + self.velocity * dt
   self.lifespan -= 1.0
-  # self.acceleration = self.acceleration * 0.0
 
 func isDead*(self: Particle): bool =
   self.lifespan <= 0.0
