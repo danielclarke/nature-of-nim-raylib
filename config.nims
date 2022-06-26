@@ -26,7 +26,11 @@ when defined(emscripten):
   switch("passL", "-s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -o build/index.html --shell-file ./assets/index.html")
 else:
   --cc:gcc
-  --mm:orc # GC:orc is friendlier with crazy platforms.
+  --mm:arc # GC:orc is friendlier with crazy platforms.
+
+  when defined(lto):
+    switch("passC", "-flto -O4")
+    switch("passL", "-flto -O4")
  
 --outdir:build
 --styleCheck:hint
