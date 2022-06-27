@@ -10,6 +10,7 @@ import nimraylib_now
 import vec2
 import aabb
 import tiles
+import map
 import mover
 import particle_system
 
@@ -22,14 +23,6 @@ const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
 
 const FRAME_RATE = 60
-
-type
-  Wall = object
-    p0, p1: Vec2
-  
-  Water = object
-    p0, p1: Vec2
-    c: float
 
 converter toVector2(v: Vec2): Vector2 =
   Vector2(x: v.x, y: v.y)
@@ -50,37 +43,6 @@ proc render(a: Aabb; c: Color = Lightgray) =
     ((a.p1.y - a.p0.y) * TILE_WIDTH * SCALE).cint,
     c
   )
-
-proc countElems[w, h](tiles: array[w, array[h, int]]): int =
-  var count = 0
-  for i, row in tiles:
-    for j, tile in row:
-      if tile > 0:
-        inc count
-  return count
-
-proc loadWalls[w, h, n](walls: var array[n, Wall]; tiles: array[w, array[h, int]]) =
-  var iWall = 0
-  for i, row in tiles:
-    for j, tile in row:
-      if tile > 0:
-        walls[iWall] = Wall(
-          p0: Vec2(x: toFloat(i), y: toFloat(j)),
-          p1: Vec2(x: toFloat(i + 1), y: toFloat(j + 1))
-        )
-        inc iWall
-
-proc loadWaters[w, h, n](waters: var array[n, Water]; tiles: array[w, array[h, int]], c: float) =
-  var iWater = 0
-  for i, row in tiles:
-    for j, tile in row:
-      if tile > 0:
-        waters[iWater] = Water(
-          p0: Vec2(x: toFloat(i), y: toFloat(j)),
-          p1: Vec2(x: toFloat(i + 1), y: toFloat(j + 1)),
-          c: c
-        )
-        inc iWater
 
 func checkCollision[T, U: Aabb](a: T; b: U; va, vb: Vec2 = Vec2(x: 0.0, y: 0.0)): bool =
   let collisionTime = timeToCollision(a, b, va, vb)
