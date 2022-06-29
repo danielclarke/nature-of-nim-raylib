@@ -61,5 +61,8 @@ func limit*(v: Vec2, l: float): Vec2 =
 proc randVec2*(min, max: Vec2): Vec2 =
   Vec2(x: rand(max.x - min.x) + min.x, y: rand(max.y - min.y) + min.y)
 
+proc vec2FromAngle*(theta: float): Vec2 =
+  Vec2(x: cos(theta), y: sin(theta))
+
 converter toVec2*(v: Vec2Tuple): Vec2 =
   Vec2(x: v.x, y: v.y)
