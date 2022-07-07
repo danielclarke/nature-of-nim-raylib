@@ -1,4 +1,4 @@
-import nimprof
+# import nimprof
 
 import std/random
 import std/math
@@ -14,9 +14,9 @@ type
     location, velocity, acceleration: Vec2
     mass, maxSpeed, maxForce: float
   
-  FlowField[W, H: static[int]] = object
+  FlowField = object
     width, height: int
-    field: array[W, array[H, Vec2]]
+    field: seq[seq[Vec2]]
 
 func applyForce*(self: var Vehicle, force: Vec2) =
   let da = force / self.mass
@@ -48,14 +48,14 @@ proc newVehicle(location: Vec2; mass, maxSpeed, maxForce: float): Vehicle =
     maxForce: maxForce
   )
 
-proc newFlowField[W, H: static[int]](t: float): FlowField[W, H] =
-  var field: array[W, array[H, Vec2]]
-  for i in 0 ..< W:
-    var f: array[H, Vec2]
-    for j in 0 ..< H:
-      f[j] = 10.0 * vec2FromAngle(2 * PI * noise(i.float / 33.33, j.float / 33.33, t))
-    field[i] = f
-  FlowField[W, H](field: field)
+proc newFlowField(width, height: int; t: float): FlowField =
+  var field: seq[seq[Vec2]]
+  for i in 0 ..< width:
+    var f: seq[Vec2]
+    for j in 0 ..< height:
+      f.add(10.0 * vec2FromAngle(2 * PI * noise(i.float / 33.33, j.float / 33.33, t)))
+    field.add(f)
+  FlowField(width: width, height: height, field: field)
 
 proc getFlow(self: FlowField; location: Vec2; screenWidth, screenHeight: int): Vec2 =
   let x = floor(location.x / screenWidth.float * self.field.len.float).int
@@ -83,7 +83,7 @@ func renderFlowField(f: FlowField; screenWidth, screenHeight: int) =
       )
 
 proc visualise =
-  const SCALE = 3
+  const SCALE = 2
   const TILE_WIDTH = 8
   const WIDTH = 32
   const HEIGHT = 28
@@ -108,7 +108,7 @@ proc visualise =
   var t = 0.0
   while not windowShouldClose():
     t += 0.0011
-    let ff = newFlowField[40, 40](t)
+    let ff = newFlowField(40, 40, t)
     for i, v in mpairs(vehicles):
       v.seek(v.location + ff.getFlow(v.location, SCREEN_WIDTH, SCREEN_HEIGHT).norm)
       # if i == 0:
@@ -146,7 +146,7 @@ proc perfTest =
   var t = 0.0
   for i in 0 ..< 100_000:
     t += 0.0011
-    let ff = newFlowField[40, 40](t)
+    let ff = newFlowField(40, 40, t)
     for i, v in mpairs(vehicles):
       v.seek(v.location + ff.getFlow(v.location, SCREEN_WIDTH, SCREEN_HEIGHT).norm)  
       v.update(1.0 / 60.0)

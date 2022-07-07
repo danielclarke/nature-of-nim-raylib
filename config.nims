@@ -31,6 +31,10 @@ else:
   when defined(lto):
     switch("passC", "-flto -O4")
     switch("passL", "-flto -O4")
+
+  when defined(profile):
+    --profiler:on
+    --stacktrace:on
  
 --outdir:build
 --styleCheck:hint
