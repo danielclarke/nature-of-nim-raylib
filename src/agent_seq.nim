@@ -1,4 +1,4 @@
-# import nimprof
+import nimprof
 
 import std/random
 import std/math
@@ -49,12 +49,11 @@ proc newVehicle(location: Vec2; mass, maxSpeed, maxForce: float): Vehicle =
   )
 
 proc newFlowField(width, height: int; t: float): FlowField =
-  var field: seq[seq[Vec2]]
+  var field = newSeq[seq[Vec2]](width)
   for i in 0 ..< width:
-    var f: seq[Vec2]
+    field[i] = newSeq[Vec2](height)
     for j in 0 ..< height:
-      f.add(10.0 * vec2FromAngle(2 * PI * noise(i.float / 33.33, j.float / 33.33, t)))
-    field.add(f)
+      field[i][j] = (10.0 * vec2FromAngle(2 * PI * noise(i.float / 33.33, j.float / 33.33, t)))
   FlowField(width: width, height: height, field: field)
 
 proc getFlow(self: FlowField; location: Vec2; screenWidth, screenHeight: int): Vec2 =

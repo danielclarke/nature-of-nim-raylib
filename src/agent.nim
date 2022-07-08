@@ -13,7 +13,7 @@ type
   Vehicle = object
     location, velocity, acceleration: Vec2
     mass, maxSpeed, maxForce: float
-  
+
   FlowField[W, H: static[int]] = object
     width, height: int
     field: array[W, array[H, Vec2]]
@@ -24,10 +24,6 @@ func applyForce*(self: var Vehicle, force: Vec2) =
 
 func seek(self: var Vehicle; target: Vec2) =
   var desired = (target - self.location)
-  let d = desired.mag
-  # if d < 50.0:
-  #   desired = desired.norm * min(1.0, d / 400.0) * self.maxSpeed
-  # else:
   desired = desired.norm * self.maxSpeed
   let steer = (desired - self.velocity).limit(self.maxForce)
   self.applyForce(steer)
@@ -36,7 +32,7 @@ proc update*(self: var Vehicle, dt: float) =
   self.velocity = self.velocity + self.acceleration * dt
   self.velocity = self.velocity.limit(self.maxSpeed)
   self.location = self.location + self.velocity * dt
-  self.acceleration = self.acceleration * 0.0
+  self.acceleration = Vec2(x: 0.0, y: 0.0)
 
 proc newVehicle(location: Vec2; mass, maxSpeed, maxForce: float): Vehicle =
   Vehicle(
@@ -51,16 +47,22 @@ proc newVehicle(location: Vec2; mass, maxSpeed, maxForce: float): Vehicle =
 proc newFlowField[W, H: static[int]](t: float): FlowField[W, H] =
   var field: array[W, array[H, Vec2]]
   for i in 0 ..< W:
-    var f: array[H, Vec2]
     for j in 0 ..< H:
-      f[j] = 10.0 * vec2FromAngle(2 * PI * noise(i.float / 33.33, j.float / 33.33, t))
-    field[i] = f
-  FlowField[W, H](field: field)
+      field[i][j] = 10.0 * vec2FromAngle(2 * PI * noise(i.float / 33.33,
+          j.float / 33.33, t))
+  FlowField[W, H](width: W, height: H, field: field)
 
-proc getFlow(self: FlowField; location: Vec2; screenWidth, screenHeight: int): Vec2 =
-  let x = floor(location.x / screenWidth.float * self.field.len.float).int
-  let y = floor(location.y / screenHeight.float * self.field[0].len.float).int
-  
+proc popFlowField(ff: var FlowField, t: float) =
+  for i in 0 ..< ff.width:
+    for j in 0 ..< ff.height:
+      ff.field[i][j] = 10.0 * vec2FromAngle(2 * PI * noise(i.float / 33.33,
+          j.float / 33.33, t))
+
+proc getFlow(self: FlowField; location: Vec2; screenWidth,
+    screenHeight: int): Vec2 =
+  let x = floor(location.x / screenWidth.float * self.width.float).int
+  let y = floor(location.y / screenHeight.float * self.height.float).int
+
   let i = min(self.field.len - 1, max(0, x))
   let j = min(self.field[i].len - 1, max(0, y))
   self.field[i][j]
@@ -99,25 +101,26 @@ proc visualise =
   var vehicles: array[250, Vehicle]
   for i in 0 ..< 250:
     vehicles[i] = newVehicle(
-      randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float, y: SCREEN_HEIGHT.float)), 
+      randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float,
+          y: SCREEN_HEIGHT.float)),
       1.0,
       100.0,
       100.0
     )
 
   var t = 0.0
+  var ff = newFlowField[40, 40](t)
   while not windowShouldClose():
     t += 0.0011
-    let ff = newFlowField[40, 40](t)
+    popFlowField(ff, t)
     for i, v in mpairs(vehicles):
-      v.seek(v.location + ff.getFlow(v.location, SCREEN_WIDTH, SCREEN_HEIGHT).norm)
-      # if i == 0:
-      #   v.seek(Vec2(x: getMouseX().float, y: getMouseY().float))
-      # else:
-      #   v.seek(vehicles[i - 1].location + vehicles[i - 1].velocity / 60.0 * 10.0)    
+      v.seek(v.location + ff.getFlow(v.location, SCREEN_WIDTH,
+          SCREEN_HEIGHT).norm)
       v.update(1.0 / 60.0)
-      if v.location.x < 0.0 or SCREEN_WIDTH.float < v.location.x or v.location.y < 0.0 or SCREEN_HEIGHT.float < v.location.y:
-        v.location = randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float, y: SCREEN_HEIGHT.float))
+      if v.location.x < 0.0 or SCREEN_WIDTH.float < v.location.x or
+          v.location.y < 0.0 or SCREEN_HEIGHT.float < v.location.y:
+        v.location = randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float,
+            y: SCREEN_HEIGHT.float))
     beginDrawing:
       clearBackground(Darkgray)
       for v in vehicles:
@@ -137,7 +140,8 @@ proc perfTest =
   var vehicles: array[250, Vehicle]
   for i in 0 ..< 250:
     vehicles[i] = newVehicle(
-      randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float, y: SCREEN_HEIGHT.float)), 
+      randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float,
+          y: SCREEN_HEIGHT.float)),
       1.0,
       100.0,
       100.0
@@ -148,10 +152,13 @@ proc perfTest =
     t += 0.0011
     let ff = newFlowField[40, 40](t)
     for i, v in mpairs(vehicles):
-      v.seek(v.location + ff.getFlow(v.location, SCREEN_WIDTH, SCREEN_HEIGHT).norm)  
+      v.seek(v.location + ff.getFlow(v.location, SCREEN_WIDTH,
+          SCREEN_HEIGHT).norm)
       v.update(1.0 / 60.0)
-      if v.location.x < 0.0 or SCREEN_WIDTH.float < v.location.x or v.location.y < 0.0 or SCREEN_HEIGHT.float < v.location.y:
-        v.location = randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float, y: SCREEN_HEIGHT.float))
+      if v.location.x < 0.0 or SCREEN_WIDTH.float < v.location.x or
+          v.location.y < 0.0 or SCREEN_HEIGHT.float < v.location.y:
+        v.location = randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float,
+            y: SCREEN_HEIGHT.float))
 
 proc main =
   when defined(profile):
