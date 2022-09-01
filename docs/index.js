@@ -5983,8 +5983,6 @@ function GetCanvasHeight() { return canvas.clientHeight; }
       GLctx.bindTexture(target, GL.textures[texture]);
     }
 
-  function _glBlendEquation(x0) { GLctx['blendEquation'](x0) }
-
   function _glBlendFunc(x0, x1) { GLctx['blendFunc'](x0, x1) }
 
   function _glBufferData(target, size, data, usage) {
@@ -9213,7 +9211,6 @@ var asmLibraryArg = {
   "glBindAttribLocation": _glBindAttribLocation,
   "glBindBuffer": _glBindBuffer,
   "glBindTexture": _glBindTexture,
-  "glBlendEquation": _glBlendEquation,
   "glBlendFunc": _glBlendFunc,
   "glBufferData": _glBufferData,
   "glBufferSubData": _glBufferSubData,
@@ -9445,8 +9442,8 @@ var _asyncify_start_rewind = Module["_asyncify_start_rewind"] = createExportWrap
 /** @type {function(...*):?} */
 var _asyncify_stop_rewind = Module["_asyncify_stop_rewind"] = createExportWrapper("asyncify_stop_rewind");
 
-var ___start_em_js = Module['___start_em_js'] = 41308;
-var ___stop_em_js = Module['___stop_em_js'] = 41383;
+var ___start_em_js = Module['___start_em_js'] = 41116;
+var ___stop_em_js = Module['___stop_em_js'] = 41191;
 
 
 
