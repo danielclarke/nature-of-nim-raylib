@@ -23,7 +23,7 @@ const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
 
 when defined(emscripten):
-  const FRAME_RATE = 30
+  const FRAME_RATE = 60
 else:
   const FRAME_RATE = 60
 
@@ -79,14 +79,14 @@ proc main() =
   var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
   
-  var particleSystem = newParticleSystem(
-    (x: 1.0, y: HEIGHT - 10.0), 
-    (x: 0.0, y: 0.0),
-    (x: 1.0, y: 1.0),
-    (x: 0.0, y: 3.0),
-    1.0,
-    FRAME_RATE * 2
-  )
+  # var particleSystem = newParticleSystem(
+  #   (x: 1.0, y: HEIGHT - 10.0), 
+  #   (x: 0.0, y: 0.0),
+  #   (x: 1.0, y: 1.0),
+  #   (x: 0.0, y: 3.0),
+  #   1.0,
+  #   FRAME_RATE * 2
+  # )
 
   var camera = Camera2D()
   camera.target = player.location
@@ -110,6 +110,8 @@ proc main() =
     closeWindow()
 
   while not windowShouldClose():
+    let dt = getFrameTime()
+
     player.acceleration += g
 
     if isKeyPressed(KeyboardKey.W):
@@ -177,18 +179,18 @@ proc main() =
 
       render(player, colorFromHSV(15.0, 1.0, 1.0))
 
-      beginBlendMode(BlendMode.ADDITIVE)
-      for particle in particleSystem.particles:
-        if not particle.isDead:
-          render(particle, colorFromHSV(15.0, 1.0, 1.0))
-      endBlendMode()
+      # beginBlendMode(BlendMode.ADDITIVE)
+      # for particle in particleSystem.particles:
+      #   if not particle.isDead:
+      #     render(particle, colorFromHSV(15.0, 1.0, 1.0))
+      # endBlendMode()
 
       if onGround and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
       elif not doubleJump and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
         doubleJump = true
-      let velocity = player.getUpdateVelocity(1.0 / FRAME_RATE)
+      let velocity = player.getUpdateVelocity(dt)
       onGround = false
 
       for wall in walls:
@@ -219,15 +221,15 @@ proc main() =
             player.location.y = wall.p1.y
             render(wall, Blue)
 
-      for wall in walls:
-        for _, particle in mpairs(particleSystem.particles):
-           if checkCollision(particle, wall, velocity, Vec2(x: 0.0, y: 0.0)):
-            render(wall, Red)
+      # for wall in walls:
+      #   for _, particle in mpairs(particleSystem.particles):
+      #      if checkCollision(particle, wall, velocity, Vec2(x: 0.0, y: 0.0)):
+      #       render(wall, Red)
 
       block underWater:
         for water in waters:
           if checkCollision(player, water):
-            breath -= 1.0 / FRAME_RATE
+            breath -= dt
             if breath < 0.0:
               player.dead
               break underWater
@@ -262,8 +264,8 @@ proc main() =
 
       endMode2D()
 
-      player.update(1.0 / FRAME_RATE)
-      particleSystem.update(1.0 / FRAME_RATE)
+      player.update(dt)
+      # particleSystem.update(dt)
       # drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 
 main()
