@@ -1,4 +1,4 @@
-import nimprof
+# import nimprof
 
 import std/random
 import std/math
@@ -71,15 +71,15 @@ func renderFlowField(f: FlowField; screenWidth, screenHeight: int) =
   for i, row in pairs(f.field):
     for j, cell in pairs(row):
       drawLine(
-        (i * (screenWidth / f.field.len).int).cint,
-        (j * (screenHeight / row.len).int).cint,
-        ((cell.x).int + i * (screenWidth / f.field.len).int).cint,
-        ((cell.y).int + j * (screenHeight / row.len).int).cint,
+        (i * (screenWidth / f.field.len).int).cint + 15,
+        (j * (screenHeight / row.len).int).cint + 15,
+        ((cell.x).int + i * (screenWidth / f.field.len).int).cint + 15,
+        ((cell.y).int + j * (screenHeight / row.len).int).cint + 15,
         Black
       )
       drawCircle(
-        ((cell.x).int + i * (screenWidth / f.field.len).int).cint,
-        ((cell.y).int + j * (screenHeight / row.len).int).cint,
+        ((cell.x).int + i * (screenWidth / f.field.len).int).cint + 15,
+        ((cell.y).int + j * (screenHeight / row.len).int).cint + 15,
         2.0,
         Blue
       )
@@ -98,8 +98,9 @@ proc visualise =
   defer:
     closeWindow()
 
-  var vehicles: array[250, Vehicle]
-  for i in 0 ..< 250:
+  const numVehicles = 5000;
+  var vehicles: array[numVehicles, Vehicle]
+  for i in 0 ..< numVehicles:
     vehicles[i] = newVehicle(
       randVec2(Vec2(x: 0.0, y: 0.0), Vec2(x: SCREEN_WIDTH.float,
           y: SCREEN_HEIGHT.float)),
@@ -109,7 +110,8 @@ proc visualise =
     )
 
   var t = 0.0
-  var ff = newFlowField[40, 40](t)
+  const fieldSize = 100
+  var ff = newFlowField[fieldSize, fieldSize](t)
   while not windowShouldClose():
     t += 0.0011
     popFlowField(ff, t)

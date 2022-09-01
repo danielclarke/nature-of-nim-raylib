@@ -1,4 +1,4 @@
-import nimprof
+# import nimprof
 
 import std/random
 import std/math

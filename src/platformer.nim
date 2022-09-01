@@ -22,7 +22,10 @@ const SCALE = 2
 const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
 
-const FRAME_RATE = 60
+when defined(emscripten):
+  const FRAME_RATE = 30
+else:
+  const FRAME_RATE = 60
 
 converter toVector2(v: Vec2): Vector2 =
   Vector2(x: v.x, y: v.y)
@@ -261,6 +264,6 @@ proc main() =
 
       player.update(1.0 / FRAME_RATE)
       particleSystem.update(1.0 / FRAME_RATE)
-      drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
+      # drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 
 main()

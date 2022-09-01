@@ -1,7 +1,4 @@
 when defined(emscripten):
-
-  --nimcache:tmp # Store intermediate files close by in the ./tmp dir.
-
   --os:linux # Emscripten pretends to be linux.
   --cpu:wasm32 # Emscripten is 32bits.
   --cc:clang # Emscripten is very close to clang, so we will replace it.
@@ -18,6 +15,7 @@ when defined(emscripten):
 
   --listCmd # List what commands we are running so that we can debug them.
 
+  --threads:off
   --mm:orc # GC:orc is friendlier with crazy platforms.
   --exceptions:goto # Goto exceptions are friendlier with crazy platforms.
   --define:noSignalHandler # Emscripten doesn't support signal handlers.
@@ -36,6 +34,7 @@ else:
     --profiler:on
     --stacktrace:on
  
+--nimcache:tmp # Store intermediate files close by in the ./tmp dir.
 --outdir:build
 --styleCheck:hint
 --verbosity:2
