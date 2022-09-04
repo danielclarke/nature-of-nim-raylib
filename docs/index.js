@@ -3706,33 +3706,6 @@ function GetCanvasHeight() { return canvas.clientHeight; }
   }
   }
 
-  function ___syscall_lstat64(path, buf) {
-  try {
-  
-      path = SYSCALLS.getStr(path);
-      return SYSCALLS.doStat(FS.lstat, path, buf);
-    } catch (e) {
-    if (typeof FS == 'undefined' || !(e instanceof FS.ErrnoError)) throw e;
-    return -e.errno;
-  }
-  }
-
-  function ___syscall_newfstatat(dirfd, path, buf, flags) {
-  try {
-  
-      path = SYSCALLS.getStr(path);
-      var nofollow = flags & 256;
-      var allowEmpty = flags & 4096;
-      flags = flags & (~4352);
-      assert(!flags, flags);
-      path = SYSCALLS.calculateAt(dirfd, path, allowEmpty);
-      return SYSCALLS.doStat(nofollow ? FS.lstat : FS.stat, path, buf);
-    } catch (e) {
-    if (typeof FS == 'undefined' || !(e instanceof FS.ErrnoError)) throw e;
-    return -e.errno;
-  }
-  }
-
   function ___syscall_openat(dirfd, path, flags, varargs) {
   SYSCALLS.varargs = varargs;
   try {
@@ -3747,24 +3720,8 @@ function GetCanvasHeight() { return canvas.clientHeight; }
   }
   }
 
-  function ___syscall_stat64(path, buf) {
-  try {
-  
-      path = SYSCALLS.getStr(path);
-      return SYSCALLS.doStat(FS.stat, path, buf);
-    } catch (e) {
-    if (typeof FS == 'undefined' || !(e instanceof FS.ErrnoError)) throw e;
-    return -e.errno;
-  }
-  }
-
   function __emscripten_date_now() {
       return Date.now();
-    }
-
-  var nowIsMonotonic = true;;
-  function __emscripten_get_now_is_monotonic() {
-      return nowIsMonotonic;
     }
 
   function __mmap_js(len, prot, flags, fd, off, allocated) {
@@ -6022,9 +5979,21 @@ function GetCanvasHeight() { return canvas.clientHeight; }
       GLctx.bindBuffer(target, GL.buffers[buffer]);
     }
 
+  function _glBindFramebuffer(target, framebuffer) {
+  
+      GLctx.bindFramebuffer(target, GL.framebuffers[framebuffer]);
+  
+    }
+
+  function _glBindRenderbuffer(target, renderbuffer) {
+      GLctx.bindRenderbuffer(target, GL.renderbuffers[renderbuffer]);
+    }
+
   function _glBindTexture(target, texture) {
       GLctx.bindTexture(target, GL.textures[texture]);
     }
+
+  function _glBlendEquation(x0) { GLctx['blendEquation'](x0) }
 
   function _glBlendFunc(x0, x1) { GLctx['blendFunc'](x0, x1) }
 
@@ -6038,6 +6007,8 @@ function GetCanvasHeight() { return canvas.clientHeight; }
   function _glBufferSubData(target, offset, size, data) {
       GLctx.bufferSubData(target, offset, HEAPU8.subarray(data, data+size));
     }
+
+  function _glCheckFramebufferStatus(x0) { return GLctx['checkFramebufferStatus'](x0) }
 
   function _glClear(x0) { GLctx['clear'](x0) }
 
@@ -6090,6 +6061,17 @@ function GetCanvasHeight() { return canvas.clientHeight; }
       }
     }
 
+  function _glDeleteFramebuffers(n, framebuffers) {
+      for (var i = 0; i < n; ++i) {
+        var id = HEAP32[(((framebuffers)+(i*4))>>2)];
+        var framebuffer = GL.framebuffers[id];
+        if (!framebuffer) continue; // GL spec: "glDeleteFramebuffers silently ignores 0s and names that do not correspond to existing framebuffer objects".
+        GLctx.deleteFramebuffer(framebuffer);
+        framebuffer.name = 0;
+        GL.framebuffers[id] = null;
+      }
+    }
+
   function _glDeleteProgram(id) {
       if (!id) return;
       var program = GL.programs[id];
@@ -6100,6 +6082,17 @@ function GetCanvasHeight() { return canvas.clientHeight; }
       GLctx.deleteProgram(program);
       program.name = 0;
       GL.programs[id] = null;
+    }
+
+  function _glDeleteRenderbuffers(n, renderbuffers) {
+      for (var i = 0; i < n; i++) {
+        var id = HEAP32[(((renderbuffers)+(i*4))>>2)];
+        var renderbuffer = GL.renderbuffers[id];
+        if (!renderbuffer) continue; // GL spec: "glDeleteRenderbuffers silently ignores 0s and names that do not correspond to existing renderbuffer objects".
+        GLctx.deleteRenderbuffer(renderbuffer);
+        renderbuffer.name = 0;
+        GL.renderbuffers[id] = null;
+      }
     }
 
   function _glDeleteShader(id) {
@@ -6154,10 +6147,30 @@ function GetCanvasHeight() { return canvas.clientHeight; }
       GLctx.enableVertexAttribArray(index);
     }
 
+  function _glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer) {
+      GLctx.framebufferRenderbuffer(target, attachment, renderbuffertarget,
+                                         GL.renderbuffers[renderbuffer]);
+    }
+
+  function _glFramebufferTexture2D(target, attachment, textarget, texture, level) {
+      GLctx.framebufferTexture2D(target, attachment, textarget,
+                                      GL.textures[texture], level);
+    }
+
   function _glFrontFace(x0) { GLctx['frontFace'](x0) }
 
   function _glGenBuffers(n, buffers) {
       __glGenObject(n, buffers, 'createBuffer', GL.buffers
+        );
+    }
+
+  function _glGenFramebuffers(n, ids) {
+      __glGenObject(n, ids, 'createFramebuffer', GL.framebuffers
+        );
+    }
+
+  function _glGenRenderbuffers(n, renderbuffers) {
+      __glGenObject(n, renderbuffers, 'createRenderbuffer', GL.renderbuffers
         );
     }
 
@@ -6172,6 +6185,15 @@ function GetCanvasHeight() { return canvas.clientHeight; }
 
   function _glGetFloatv(name_, p) {
       emscriptenWebGLGet(name_, p, 2);
+    }
+
+  function _glGetFramebufferAttachmentParameteriv(target, attachment, pname, params) {
+      var result = GLctx.getFramebufferAttachmentParameter(target, attachment, pname);
+      if (result instanceof WebGLRenderbuffer ||
+          result instanceof WebGLTexture) {
+        result = result.name | 0;
+      }
+      HEAP32[((params)>>2)] = result;
     }
 
   function _glGetProgramInfoLog(program, maxLength, length, infoLog) {
@@ -6375,6 +6397,8 @@ function GetCanvasHeight() { return canvas.clientHeight; }
       }
       GLctx.readPixels(x, y, width, height, format, type, pixelData);
     }
+
+  function _glRenderbufferStorage(x0, x1, x2, x3) { GLctx['renderbufferStorage'](x0, x1, x2, x3) }
 
   function _glShaderSource(shader, count, string, length) {
       var source = GL.getSource(shader, count, string, length);
@@ -9062,12 +9086,8 @@ var asmLibraryArg = {
   "__syscall_fstat64": ___syscall_fstat64,
   "__syscall_getcwd": ___syscall_getcwd,
   "__syscall_ioctl": ___syscall_ioctl,
-  "__syscall_lstat64": ___syscall_lstat64,
-  "__syscall_newfstatat": ___syscall_newfstatat,
   "__syscall_openat": ___syscall_openat,
-  "__syscall_stat64": ___syscall_stat64,
   "_emscripten_date_now": __emscripten_date_now,
-  "_emscripten_get_now_is_monotonic": __emscripten_get_now_is_monotonic,
   "_mmap_js": __mmap_js,
   "_munmap_js": __munmap_js,
   "emscripten_get_element_css_size": _emscripten_get_element_css_size,
@@ -9257,10 +9277,14 @@ var asmLibraryArg = {
   "glAttachShader": _glAttachShader,
   "glBindAttribLocation": _glBindAttribLocation,
   "glBindBuffer": _glBindBuffer,
+  "glBindFramebuffer": _glBindFramebuffer,
+  "glBindRenderbuffer": _glBindRenderbuffer,
   "glBindTexture": _glBindTexture,
+  "glBlendEquation": _glBlendEquation,
   "glBlendFunc": _glBlendFunc,
   "glBufferData": _glBufferData,
   "glBufferSubData": _glBufferSubData,
+  "glCheckFramebufferStatus": _glCheckFramebufferStatus,
   "glClear": _glClear,
   "glClearColor": _glClearColor,
   "glClearDepthf": _glClearDepthf,
@@ -9270,7 +9294,9 @@ var asmLibraryArg = {
   "glCreateShader": _glCreateShader,
   "glCullFace": _glCullFace,
   "glDeleteBuffers": _glDeleteBuffers,
+  "glDeleteFramebuffers": _glDeleteFramebuffers,
   "glDeleteProgram": _glDeleteProgram,
+  "glDeleteRenderbuffers": _glDeleteRenderbuffers,
   "glDeleteShader": _glDeleteShader,
   "glDeleteTextures": _glDeleteTextures,
   "glDepthFunc": _glDepthFunc,
@@ -9281,11 +9307,16 @@ var asmLibraryArg = {
   "glDrawElements": _glDrawElements,
   "glEnable": _glEnable,
   "glEnableVertexAttribArray": _glEnableVertexAttribArray,
+  "glFramebufferRenderbuffer": _glFramebufferRenderbuffer,
+  "glFramebufferTexture2D": _glFramebufferTexture2D,
   "glFrontFace": _glFrontFace,
   "glGenBuffers": _glGenBuffers,
+  "glGenFramebuffers": _glGenFramebuffers,
+  "glGenRenderbuffers": _glGenRenderbuffers,
   "glGenTextures": _glGenTextures,
   "glGetAttribLocation": _glGetAttribLocation,
   "glGetFloatv": _glGetFloatv,
+  "glGetFramebufferAttachmentParameteriv": _glGetFramebufferAttachmentParameteriv,
   "glGetProgramInfoLog": _glGetProgramInfoLog,
   "glGetProgramiv": _glGetProgramiv,
   "glGetShaderInfoLog": _glGetShaderInfoLog,
@@ -9295,6 +9326,7 @@ var asmLibraryArg = {
   "glLinkProgram": _glLinkProgram,
   "glPixelStorei": _glPixelStorei,
   "glReadPixels": _glReadPixels,
+  "glRenderbufferStorage": _glRenderbufferStorage,
   "glShaderSource": _glShaderSource,
   "glTexImage2D": _glTexImage2D,
   "glTexParameterf": _glTexParameterf,
@@ -9403,9 +9435,6 @@ var stackRestore = Module["stackRestore"] = createExportWrapper("stackRestore");
 var stackAlloc = Module["stackAlloc"] = createExportWrapper("stackAlloc");
 
 /** @type {function(...*):?} */
-var dynCall_iii = Module["dynCall_iii"] = createExportWrapper("dynCall_iii");
-
-/** @type {function(...*):?} */
 var dynCall_iiii = Module["dynCall_iiii"] = createExportWrapper("dynCall_iiii");
 
 /** @type {function(...*):?} */
@@ -9424,13 +9453,13 @@ var dynCall_viiii = Module["dynCall_viiii"] = createExportWrapper("dynCall_viiii
 var dynCall_vidd = Module["dynCall_vidd"] = createExportWrapper("dynCall_vidd");
 
 /** @type {function(...*):?} */
-var dynCall_ii = Module["dynCall_ii"] = createExportWrapper("dynCall_ii");
-
-/** @type {function(...*):?} */
 var dynCall_vi = Module["dynCall_vi"] = createExportWrapper("dynCall_vi");
 
 /** @type {function(...*):?} */
 var dynCall_vffff = Module["dynCall_vffff"] = createExportWrapper("dynCall_vffff");
+
+/** @type {function(...*):?} */
+var dynCall_ii = Module["dynCall_ii"] = createExportWrapper("dynCall_ii");
 
 /** @type {function(...*):?} */
 var dynCall_vf = Module["dynCall_vf"] = createExportWrapper("dynCall_vf");
@@ -9452,6 +9481,9 @@ var dynCall_v = Module["dynCall_v"] = createExportWrapper("dynCall_v");
 
 /** @type {function(...*):?} */
 var dynCall_viiiiiii = Module["dynCall_viiiiiii"] = createExportWrapper("dynCall_viiiiiii");
+
+/** @type {function(...*):?} */
+var dynCall_iii = Module["dynCall_iii"] = createExportWrapper("dynCall_iii");
 
 /** @type {function(...*):?} */
 var dynCall_vfi = Module["dynCall_vfi"] = createExportWrapper("dynCall_vfi");
@@ -9478,9 +9510,6 @@ var dynCall_viiiiii = Module["dynCall_viiiiii"] = createExportWrapper("dynCall_v
 var dynCall_jiji = Module["dynCall_jiji"] = createExportWrapper("dynCall_jiji");
 
 /** @type {function(...*):?} */
-var dynCall_iidiiii = Module["dynCall_iidiiii"] = createExportWrapper("dynCall_iidiiii");
-
-/** @type {function(...*):?} */
 var _asyncify_start_unwind = Module["_asyncify_start_unwind"] = createExportWrapper("asyncify_start_unwind");
 
 /** @type {function(...*):?} */
@@ -9492,8 +9521,8 @@ var _asyncify_start_rewind = Module["_asyncify_start_rewind"] = createExportWrap
 /** @type {function(...*):?} */
 var _asyncify_stop_rewind = Module["_asyncify_stop_rewind"] = createExportWrapper("asyncify_stop_rewind");
 
-var ___start_em_js = Module['___start_em_js'] = 42168;
-var ___stop_em_js = Module['___stop_em_js'] = 42243;
+var ___start_em_js = Module['___start_em_js'] = 41836;
+var ___stop_em_js = Module['___stop_em_js'] = 41911;
 
 
 
