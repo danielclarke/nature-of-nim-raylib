@@ -18,6 +18,7 @@ const TILE_WIDTH = 8
 const WIDTH = 32
 const HEIGHT = 28
 const SCALE = 2
+const SCALED_TILE_WIDTH = SCALE * TILE_WIDTH
 
 const SCREEN_WIDTH: int = WIDTH * TILE_WIDTH * SCALE
 const SCREEN_HEIGHT: int = HEIGHT * TILE_WIDTH * SCALE
@@ -79,14 +80,15 @@ proc main() =
   var player = newMover(1.0, HEIGHT - 10.0, 12.0, 0.75)
   var onGround = false
   
-  # var particleSystem = newParticleSystem(
-  #   (x: 1.0, y: HEIGHT - 10.0), 
-  #   (x: 0.0, y: 0.0),
-  #   (x: 1.0, y: 1.0),
-  #   (x: 0.0, y: 3.0),
-  #   1.0,
-  #   FRAME_RATE * 2
-  # )
+  var particleSystem = newParticleSystem(
+    (x: 1.0, y: HEIGHT - 10.0), 
+    (x: 0.0, y: 0.0),
+    (x: 1.0, y: 1.0),
+    (x: 0.0, y: 3.0),
+    1.0,
+    2.0,
+    256
+  )
 
   var camera = Camera2D()
   camera.target = player.location
@@ -102,6 +104,24 @@ proc main() =
   var pTargetDelta: Vec2 = (x: 0.0, y: 0.0)
 
   initWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib nim - platformer")
+
+
+  var particleTexture = loadRenderTexture(SCALED_TILE_WIDTH, SCALED_TILE_WIDTH)
+  beginTextureMode(particleTexture):
+    clearBackground(Blank)
+    let pColor = colorFromHSV(15.0, 1.0, 1.0)
+    for i in 0 ..< SCALED_TILE_WIDTH:
+      for j in 0 ..< SCALED_TILE_WIDTH:
+        let distance = (SCALED_TILE_WIDTH / 2 - i.float) * (SCALED_TILE_WIDTH / 2 - i.float) + (SCALED_TILE_WIDTH / 2 - j.float) * (SCALED_TILE_WIDTH / 2 - j.float)
+        let norm = (SCALED_TILE_WIDTH / 2) * (SCALED_TILE_WIDTH / 2) + (SCALED_TILE_WIDTH / 2) * (SCALED_TILE_WIDTH / 2)
+        drawPixel(i, j, pColor.colorAlpha(1.0 - sqrt(distance / norm)))
+        # drawPixel(i, j, pColor)
+
+  var particleSystemTexture = loadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT)
+  beginTextureMode(particleSystemTexture):
+    clearBackground(Blank)
+  defer:
+    unloadRenderTexture(particleSystemTexture)
 
   let font: Font = loadFont("assets/font/pixantiqua.ttf")
 
@@ -161,6 +181,15 @@ proc main() =
     elif isKeyDown(KeyboardKey.RIGHT):
       player.velocity.x = min(walkVelocity, player.velocity.x + walkAcceleration)
 
+    beginTextureMode(particleSystemTexture):
+      clearBackground(Blank)
+      beginBlendMode(BlendMode.ADDITIVE):
+        # let pColor = colorFromHSV(15.0, 1.0, 1.0)
+        for particle in particleSystem.particles:
+          if not particle.isDead:
+            drawTexture(particleTexture.texture, (particle.location.x * SCALED_TILE_WIDTH).cint, (particle.location.y * SCALED_TILE_WIDTH).cint, White)
+            # render(particle, pColor.colorAlpha(particle.lifespan / particleSystem.lifespan))
+
     beginDrawing:
       clearBackground(Darkgray)
       drawFPS(10, 10)
@@ -177,13 +206,10 @@ proc main() =
       for wall in walls:
         render(wall)
 
-      render(player, colorFromHSV(15.0, 1.0, 1.0))
+      let source = Rectangle(x: 0, y: 0, width: particleSystemTexture.texture.width.float, height: -particleSystemTexture.texture.height.float)
+      drawTextureRec(particleSystemTexture.texture, source, Vec2(x:0, y:0), White)
 
-      # beginBlendMode(BlendMode.ADDITIVE)
-      # for particle in particleSystem.particles:
-      #   if not particle.isDead:
-      #     render(particle, colorFromHSV(15.0, 1.0, 1.0))
-      # endBlendMode()
+      render(player, colorFromHSV(15.0, 1.0, 1.0))
 
       if onGround and isKeyPressed(KeyboardKey.UP):
         player.velocity.y = jumpImpulse
@@ -265,7 +291,7 @@ proc main() =
       endMode2D()
 
       player.update(dt)
-      # particleSystem.update(dt)
+      particleSystem.update(dt)
       # drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 
 main()
