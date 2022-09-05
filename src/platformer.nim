@@ -82,12 +82,12 @@ proc main() =
   
   var particleSystem = newParticleSystem(
     (x: 1.0, y: HEIGHT - 10.0), 
-    (x: 0.0, y: 0.0),
-    (x: 1.0, y: 1.0),
-    (x: 0.0, y: 3.0),
+    (x: -0.5, y: 0.0),
+    (x: 0.5, y: 1.0),
+    (x: 0.0, y: -3.0),
     1.0,
-    2.0,
-    256
+    1.5,
+    128
   )
 
   var camera = Camera2D()
@@ -106,14 +106,15 @@ proc main() =
   initWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib nim - platformer")
 
 
-  var particleTexture = loadRenderTexture(SCALED_TILE_WIDTH, SCALED_TILE_WIDTH)
+  const PARTICLE_WIDTH = SCALED_TILE_WIDTH
+  var particleTexture = loadRenderTexture(PARTICLE_WIDTH, PARTICLE_WIDTH)
   beginTextureMode(particleTexture):
     clearBackground(Blank)
     let pColor = colorFromHSV(15.0, 1.0, 1.0)
-    for i in 0 ..< SCALED_TILE_WIDTH:
-      for j in 0 ..< SCALED_TILE_WIDTH:
-        let distance = (SCALED_TILE_WIDTH / 2 - i.float) * (SCALED_TILE_WIDTH / 2 - i.float) + (SCALED_TILE_WIDTH / 2 - j.float) * (SCALED_TILE_WIDTH / 2 - j.float)
-        let norm = (SCALED_TILE_WIDTH / 2) * (SCALED_TILE_WIDTH / 2) + (SCALED_TILE_WIDTH / 2) * (SCALED_TILE_WIDTH / 2)
+    for i in 0 ..< PARTICLE_WIDTH:
+      for j in 0 ..< PARTICLE_WIDTH:
+        let distance = (PARTICLE_WIDTH / 2 - i.float) * (PARTICLE_WIDTH / 2 - i.float) + (PARTICLE_WIDTH / 2 - j.float) * (PARTICLE_WIDTH / 2 - j.float)
+        let norm = (PARTICLE_WIDTH / 2) * (PARTICLE_WIDTH / 2) + (PARTICLE_WIDTH / 2) * (PARTICLE_WIDTH / 2)
         drawPixel(i, j, pColor.colorAlpha(1.0 - sqrt(distance / norm)))
         # drawPixel(i, j, pColor)
 
@@ -187,7 +188,7 @@ proc main() =
         # let pColor = colorFromHSV(15.0, 1.0, 1.0)
         for particle in particleSystem.particles:
           if not particle.isDead:
-            drawTexture(particleTexture.texture, (particle.location.x * SCALED_TILE_WIDTH).cint, (particle.location.y * SCALED_TILE_WIDTH).cint, White)
+            drawTexture(particleTexture.texture, (particle.location.x * SCALED_TILE_WIDTH).cint, (particle.location.y * SCALED_TILE_WIDTH).cint, colorFromHSV(15.0, 1.0, 1.0).colorAlpha(particle.lifespan / particleSystem.lifespan))
             # render(particle, pColor.colorAlpha(particle.lifespan / particleSystem.lifespan))
 
     beginDrawing:
@@ -291,6 +292,7 @@ proc main() =
       endMode2D()
 
       player.update(dt)
+      # particleSystem.location = player.location
       particleSystem.update(dt)
       # drawTextEx(font, fmt"Num ps: {particleSystem.particles.len}".cstring, Vec2(x: 1.0, y: 1.0) * TILE_WIDTH * SCALE, 2.0 * TILE_WIDTH * SCALE, 2.0, Red)
 

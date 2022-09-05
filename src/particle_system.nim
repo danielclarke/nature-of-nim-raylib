@@ -10,7 +10,7 @@ type
   
   ParticleSystem* = object
     particles*: seq[Particle]
-    location, velocityMin, velocityMax, acceleration: Vec2
+    location*, velocityMin, velocityMax, acceleration: Vec2
     generationRate, generationCount, lifespan*: float
 
 proc newParticle*(location, velocity, acceleration: Vec2; lifespan: float): Particle =
